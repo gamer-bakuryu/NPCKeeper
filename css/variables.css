@@ -1,0 +1,83 @@
+:root {
+    --color-bg-darkest: #090d09;
+    --color-bg-dark: #0f160f;
+    --color-bg-medium: #162016;
+    --color-bg-light: #1e2c1e;
+    --color-bg-lighter: #263826;
+
+    --color-green-darkest: #0f1f0f;
+    --color-green-dark: #1a351a;
+    --color-green-medium: #265426;
+    --color-green-accent: #357a35;
+    --color-green-bright: #44a244;
+    --color-green-glow: #55c455;
+    --color-green-text: #78d478;
+    --color-green-light: #a0e8a0;
+    --color-green-pale: #c8f0c8;
+
+    --color-gray-950: #111;
+    --color-gray-900: #1a1a1a;
+    --color-gray-800: #262626;
+    --color-gray-700: #363636;
+    --color-gray-600: #4a4a4a;
+    --color-gray-500: #666;
+    --color-gray-400: #888;
+    --color-gray-300: #aaa;
+    --color-gray-200: #ccc;
+    --color-gray-100: #e0e0e0;
+
+    --color-text-primary: #d0e8d0;
+    --color-text-secondary: #88aa88;
+    --color-text-muted: #557755;
+    --color-text-bright: #e8f5e8;
+
+    --color-danger: #7a2020;
+    --color-danger-bright: #bb3d3d;
+    --color-warning: #7a6520;
+    --color-warning-bright: #bba030;
+    --color-info: #1e5a7a;
+    --color-info-bright: #3898c4;
+
+    --surface-panel: #121c12;
+    --surface-card: #182618;
+    --surface-card-hover: #1e3020;
+    --surface-input: #0c140c;
+    --surface-modal: #162016;
+    --surface-overlay: rgba(0,0,0,0.78);
+
+    --border-dark: #1a2a1a;
+    --border-medium: #254025;
+    --border-light: #356035;
+    --border-accent: #357a35;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.45);
+    --shadow-md: 0 4px 14px rgba(0,0,0,0.55);
+    --shadow-lg: 0 8px 28px rgba(0,0,0,0.65);
+    --shadow-glow: 0 0 18px rgba(53,122,53,0.25);
+
+    --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+
+    --text-xs: 0.7rem;
+    --text-sm: 0.82rem;
+    --text-base: 0.95rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.4rem;
+    --text-2xl: 1.8rem;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-2xl: 32px;
+    --space-3xl: 48px;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
+
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+}
