@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPCKeeper — Gerador de NPCs para Chamado de Cthulhu 7ª Edição</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐙</text></svg>">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">🐙</span>
+                    <div class="logo-text">
+                        <h1>NPCKeeper</h1>
+                        <span class="subtitle">Gerador de NPCs — Chamado de Cthulhu 7ª Ed.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-sm btn-ghost" id="btnThemeToggle" title="Alternar tema">
+                    <span class="icon">🌙</span>
+                </button>
+                <button class="btn btn-sm btn-primary" id="btnNewNpc">
+                    <span class="icon">+</span> Novo NPC
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <main class="app-main">
+        <!-- SIDEBAR - Lista de NPCs -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>NPCs Criados</h2>
+                <span class="npc-count" id="npcCount">0</span>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="searchNpc" placeholder="Buscar NPC..." class="input-search">
+            </div>
+            <div class="sidebar-filters">
+                <select id="filterRole" class="select-filter">
+                    <option value="">Todos os Papéis</option>
+                </select>
+            </div>
+            <div class="npc-list" id="npcList">
+                <div class="empty-state" id="emptyState">
+                    <span class="empty-icon">📋</span>
+                    <p>Nenhum NPC criado ainda.</p>
+                    <p class="text-muted">Clique em "Novo NPC" para começar.</p>
+                </div>
+            </div>
+            <div class="sidebar-actions">
+                <button class="btn btn-sm btn-ghost btn-full" id="btnExportAll" title="Exportar todos">
+                    📦 Exportar Todos
+                </button>
+                <button class="btn btn-sm btn-ghost btn-full" id="btnImportNpcs" title="Importar NPCs">
+                    📥 Importar NPCs
+                </button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none">
+            </div>
+        </aside>
+
+        <!-- TOGGLE SIDEBAR MOBILE -->
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+        <!-- CONTENT AREA -->
+        <section class="content" id="contentArea">
+            <!-- WELCOME SCREEN -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <span class="welcome-icon">🐙</span>
+                    <h2>Bem-vindo ao NPCKeeper</h2>
+                    <p>Crie NPCs completos e consistentes para suas sessões de Chamado de Cthulhu.</p>
+                    <p class="text-muted">Cada NPC gerado pode ser exportado em JSON compatível com o CallKeeper.</p>
+                    <button class="btn btn-primary btn-lg" id="btnWelcomeNew">
+                        <span class="icon">+</span> Criar Primeiro NPC
+                    </button>
+                </div>
+            </div>
+
+            <!-- NPC EDITOR -->
+            <div class="npc-editor" id="npcEditor" style="display:none">
+                <form id="npcForm" autocomplete="off">
+                    <!-- EDITOR TOOLBAR -->
+                    <div class="editor-toolbar">
+                        <div class="toolbar-left">
+                            <h2 class="editor-title" id="editorTitle">Novo NPC</h2>
+                        </div>
+                        <div class="toolbar-right">
+                            <button type="button" class="btn btn-sm btn-accent" id="btnGenerateAll">
+                                🎲 Gerar Tudo
+                            </button>
+                            <button type="button" class="btn btn-sm btn-success" id="btnSaveNpc">
+                                💾 Salvar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-ghost" id="btnExportNpc">
+                                📤 Exportar JSON
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" id="btnDeleteNpc" style="display:none">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- EDITOR TABS -->
+                    <div class="editor-tabs">
+                        <button type="button" class="tab active" data-tab="tab-basic">📝 Básico</button>
+                        <button type="button" class="tab" data-tab="tab-narrative">📖 Narrativa</button>
+                        <button type="button" class="tab" data-tab="tab-attributes">🎯 Atributos</button>
+                        <button type="button" class="tab" data-tab="tab-skills">📚 Perícias</button>
+                        <button type="button" class="tab" data-tab="tab-combat">⚔️ Combate</button>
+                        <button type="button" class="tab" data-tab="tab-extras">📎 Extras</button>
+                    </div>
+
+                    <!-- TAB: BÁSICO -->
+                    <div class="tab-content active" id="tab-basic">
+                        <div class="tab-panel">
+                            <div class="basic-layout">
+                                <!-- Portrait -->
+                                <div class="portrait-section">
+                                    <div class="portrait-frame" id="portraitFrame">
+                                        <img src="" alt="Retrato" id="portraitPreview" style="display:none">
+                                        <div class="portrait-placeholder" id="portraitPlaceholder">
+                                            <span>📷</span>
+                                            <p>Clique para enviar foto</p>
+                                            <p class="text-xs">512×512 recomendado</p>
+                                        </div>
+                                        <input type="file" id="portraitInput" accept="image/*" style="display:none">
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-ghost btn-full" id="btnRemovePortrait" style="display:none">
+                                        Remover Foto
+                                    </button>
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div class="basic-info">
+                                    <div class="form-row">
+                                        <div class="form-group flex-grow">
+                                            <label for="npcName">Nome</label>
+                                            <div class="input-with-btn">
+                                                <input type="text" id="npcName" class="form-input" placeholder="Nome do NPC">
+                                                <button type="button" class="btn btn-sm btn-ghost" id="btnGenName" title="Gerar nome">🎲</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="npcAge">Idade</label>
+                                            <input type="number" id="npcAge" class="form-input" placeholder="30" min="1" max="120">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="npcSex">Sexo</label>
+                                            <select id="npcSex" class="form-input">
+                                                <option value="">— Opcional —</option>
+                                                <option value="Masculino">Masculino</option>
+                                                <option value="Feminino">Feminino</option>
+                                                <option value="Outro">Outro</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group flex-grow">
+                                            <label for="npcOccupation">Profissão</label>
+                                            <select id="npcOccupation" class="form-input">
+                                                <option value="">— Selecione —</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group flex-grow">
+                                            <label for="npcRole">Papel Narrativo</label>
+                                            <select id="npcRole" class="form-input">
+                                                <option value="">— Selecione —</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group flex-grow">
+                                            <label for="npcResidence">Residência</label>
+                                            <input type="text" id="npcResidence" class="form-input" placeholder="Arkham, Massachusetts">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group flex-grow">
+                                            <label for="npcBirthplace">Local de Nascimento</label>
+                                            <input type="text" id="npcBirthplace" class="form-input" placeholder="Boston, Massachusetts">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: NARRATIVA -->
+                    <div class="tab-content" id="tab-narrative">
+                        <div class="tab-panel">
+                            <!-- Personalidade -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Personalidade</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnGenPersonality">🎲 Gerar</button>
+                                </div>
+                                <div class="trait-grid" id="personalityGrid">
+                                    <!-- Gerado via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Objetivo -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Objetivo</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnGenObjective">🎲 Gerar</button>
+                                </div>
+                                <textarea id="npcObjective" class="form-textarea" rows="3" placeholder="O que move este personagem?"></textarea>
+                            </div>
+
+                            <!-- Segredo -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Segredo</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnGenSecret">🎲 Gerar</button>
+                                </div>
+                                <textarea id="npcSecret" class="form-textarea" rows="3" placeholder="O que este NPC esconde?"></textarea>
+                            </div>
+
+                            <!-- Ligação com o Caso -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Ligação com o Caso</h3>
+                                </div>
+                                <textarea id="npcCaseLink" class="form-textarea" rows="3" placeholder="Por que este NPC faz parte da investigação?"></textarea>
+                            </div>
+
+                            <!-- Descrição Pessoal -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Descrição Pessoal</h3>
+                                </div>
+                                <textarea id="npcDescription" class="form-textarea" rows="4" placeholder="Aparência, maneirismos, forma de falar..."></textarea>
+                            </div>
+
+                            <!-- Background -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Background</h3>
+                                </div>
+                                <textarea id="npcBackstory" class="form-textarea" rows="5" placeholder="História pregressa do personagem..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: ATRIBUTOS -->
+                    <div class="tab-content" id="tab-attributes">
+                        <div class="tab-panel">
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Características</h3>
+                                    <div class="section-actions">
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnGenAttributes">🎲 Gerar</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnResetAttributes">↺ Resetar</button>
+                                    </div>
+                                </div>
+                                <p class="section-hint">Os valores são influenciados pela profissão selecionada ao gerar automaticamente.</p>
+
+                                <div class="attributes-grid">
+                                    <div class="attr-card">
+                                        <label>FOR</label>
+                                        <span class="attr-label">Força</span>
+                                        <input type="number" id="attrSTR" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>CON</label>
+                                        <span class="attr-label">Constituição</span>
+                                        <input type="number" id="attrCON" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>TAM</label>
+                                        <span class="attr-label">Tamanho</span>
+                                        <input type="number" id="attrSIZ" class="attr-input" min="1" max="99" value="60">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>DES</label>
+                                        <span class="attr-label">Destreza</span>
+                                        <input type="number" id="attrDEX" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>APA</label>
+                                        <span class="attr-label">Aparência</span>
+                                        <input type="number" id="attrAPP" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>INT</label>
+                                        <span class="attr-label">Inteligência</span>
+                                        <input type="number" id="attrINT" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>POD</label>
+                                        <span class="attr-label">Poder</span>
+                                        <input type="number" id="attrPOW" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card">
+                                        <label>EDU</label>
+                                        <span class="attr-label">Educação</span>
+                                        <input type="number" id="attrEDU" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                    <div class="attr-card attr-luck">
+                                        <label>SOR</label>
+                                        <span class="attr-label">Sorte</span>
+                                        <input type="number" id="attrLuck" class="attr-input" min="1" max="99" value="50">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Derived Stats -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Valores Derivados</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnCalcDerived">⚙️ Calcular</button>
+                                </div>
+                                <div class="derived-grid">
+                                    <div class="derived-card">
+                                        <label>PV</label>
+                                        <span class="derived-label">Pontos de Vida</span>
+                                        <div class="derived-values">
+                                            <input type="number" id="hpMax" class="derived-input" min="0" max="99" value="11">
+                                            <span>/</span>
+                                            <input type="number" id="hpCurrent" class="derived-input" min="0" max="99" value="11">
+                                        </div>
+                                    </div>
+                                    <div class="derived-card">
+                                        <label>PM</label>
+                                        <span class="derived-label">Pontos de Magia</span>
+                                        <div class="derived-values">
+                                            <input type="number" id="mpMax" class="derived-input" min="0" max="99" value="10">
+                                            <span>/</span>
+                                            <input type="number" id="mpCurrent" class="derived-input" min="0" max="99" value="10">
+                                        </div>
+                                    </div>
+                                    <div class="derived-card">
+                                        <label>SAN</label>
+                                        <span class="derived-label">Sanidade</span>
+                                        <div class="derived-values">
+                                            <input type="number" id="sanMax" class="derived-input" min="0" max="99" value="50">
+                                            <span>/</span>
+                                            <input type="number" id="sanCurrent" class="derived-input" min="0" max="99" value="50">
+                                        </div>
+                                    </div>
+                                    <div class="derived-card">
+                                        <label>MOV</label>
+                                        <span class="derived-label">Movimento</span>
+                                        <input type="number" id="move" class="derived-input" min="0" max="20" value="8">
+                                    </div>
+                                    <div class="derived-card">
+                                        <label>BD</label>
+                                        <span class="derived-label">Bon. de Dano</span>
+                                        <input type="text" id="bonusDamage" class="derived-input" value="0" readonly>
+                                    </div>
+                                    <div class="derived-card">
+                                        <label>Corpo</label>
+                                        <span class="derived-label">Corpulência</span>
+                                        <input type="number" id="build" class="derived-input" min="-2" max="6" value="0" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: PERÍCIAS -->
+                    <div class="tab-content" id="tab-skills">
+                        <div class="tab-panel">
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Perícias</h3>
+                                    <div class="section-actions">
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnGenSkills">🎲 Gerar por Profissão</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnResetSkills">↺ Resetar</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnToggleModified">👁️ Só Modificadas</button>
+                                    </div>
+                                </div>
+                                <p class="section-hint">Perícias da profissão são destacadas. Clique em 🎲 para gerar valores coerentes com a profissão.</p>
+
+                                <div class="skills-filter">
+                                    <input type="text" id="searchSkill" class="input-search" placeholder="Buscar perícia...">
+                                </div>
+
+                                <div class="skills-grid" id="skillsGrid">
+                                    <!-- Gerado via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: COMBATE -->
+                    <div class="tab-content" id="tab-combat">
+                        <div class="tab-panel">
+                            <!-- Armas -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Armas</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddWeapon">+ Adicionar</button>
+                                </div>
+                                <div class="weapons-list" id="weaponsList">
+                                    <div class="empty-inline">Nenhuma arma adicionada.</div>
+                                </div>
+                            </div>
+
+                            <!-- Inventário -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Inventário</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddItem">+ Adicionar</button>
+                                </div>
+                                <div class="inventory-list" id="inventoryList">
+                                    <div class="empty-inline">Nenhum item no inventário.</div>
+                                </div>
+                            </div>
+
+                            <!-- Magias -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Magias / Rituais</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddSpell">+ Adicionar</button>
+                                </div>
+                                <div class="spells-list" id="spellsList">
+                                    <div class="empty-inline">Nenhuma magia conhecida.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: EXTRAS -->
+                    <div class="tab-content" id="tab-extras">
+                        <div class="tab-panel">
+                            <!-- Relações -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Relações</h3>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddRelation">+ Adicionar</button>
+                                </div>
+                                <div class="relations-list" id="relationsList">
+                                    <div class="empty-inline">Nenhuma relação adicionada.</div>
+                                </div>
+                            </div>
+
+                            <!-- Notas -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <h3>Notas do Guardião</h3>
+                                </div>
+                                <textarea id="npcNotes" class="form-textarea" rows="6" placeholder="Anotações livres sobre o NPC..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal</h3>
+                <button type="button" class="btn btn-sm btn-ghost modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+            <div class="modal-footer" id="modalFooter">
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SCRIPTS -->
+    <script src="js/data/names.js"></script>
+    <script src="js/data/occupations.js"></script>
+    <script src="js/data/skills.js"></script>
+    <script src="js/data/personality.js"></script>
+    <script src="js/data/secrets.js"></script>
+    <script src="js/data/objectives.js"></script>
+    <script src="js/data/roles.js"></script>
+    <script src="js/generators/attributeGenerator.js"></script>
+    <script src="js/generators/skillGenerator.js"></script>
+    <script src="js/generators/nameGenerator.js"></script>
+    <script src="js/generators/narrativeGenerator.js"></script>
+    <script src="js/generators/npcGenerator.js"></script>
+    <script src="js/managers/storageManager.js"></script>
+    <script src="js/managers/exportManager.js"></script>
+    <script src="js/managers/npcManager.js"></script>
+    <script src="js/ui/modalHandler.js"></script>
+    <script src="js/ui/portraitHandler.js"></script>
+    <script src="js/ui/listHandler.js"></script>
+    <script src="js/ui/formHandler.js"></script>
+    <script src="js/ui/themeHandler.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
