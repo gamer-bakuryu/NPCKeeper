@@ -834,7 +834,7 @@ function generateAttributes(occ, age) {
 }
 
 function calcDerived(a) {
-    const hp=Math.floor((a.CON+a.SIZ)/10), mp=Math.floor(a.POW/5), san=a.POW;
+    const hp=Math.floor((a.CON+a.SIZ)/5), mp=Math.floor(a.POW/5), san=a.POW;
     let mov=8;
     if(a.DEX<a.SIZ&&a.STR<a.SIZ) mov=7; else if(a.DEX>a.SIZ&&a.STR>a.SIZ) mov=9;
     const c=a.STR+a.SIZ; let bd="0",build=0;
@@ -1116,8 +1116,6 @@ function loadNPCToForm(npc) {
     document.getElementById('editorTitle').textContent=npc.characterName||'Novo NPC';
     document.getElementById('btnDeleteNpc').style.display=Storage.get(npc.id)?'inline-flex':'none';
 
-    // Reset to first tab
-    document.querySelectorAll('.tab')[0].click();
 }
 
 function readFormToNPC() {
