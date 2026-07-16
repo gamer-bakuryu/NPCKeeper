@@ -4,11 +4,380 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NPCKeeper — Gerador de NPCs para Chamado de Cthulhu 7ª Edição</title>
-    <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐙</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #242424;
+            --bg-card: #1e1e1e;
+            --bg-hover: #2a2a2a;
+            --bg-input: #1a1a1a;
+            --text-primary: #e8e6e3;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666;
+            --text-heading: #d4c5a9;
+            --border-color: #333;
+            --border-light: #2a2a2a;
+            --accent: #c9a84c;
+            --accent-hover: #d4b85c;
+            --accent-dim: rgba(201,168,76,0.15);
+            --primary: #4a7c59;
+            --primary-hover: #5a9469;
+            --success: #2d6a4f;
+            --success-hover: #3a7d5f;
+            --danger: #8b2d2d;
+            --danger-hover: #a33a3a;
+            --info: #2d5a8b;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: 0.2s ease;
+            --sidebar-width: 300px;
+            --header-height: 60px;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+        [data-theme="light"] {
+            --bg-primary: #f5f0e8; --bg-secondary: #ebe5d9; --bg-tertiary: #e0d9cc;
+            --bg-card: #fff; --bg-hover: #f0ebe0; --bg-input: #fff;
+            --text-primary: #2c2416; --text-secondary: #5c5243; --text-muted: #8a7f6f;
+            --text-heading: #4a3c28; --border-color: #d4cdbf; --border-light: #e5dfd3;
+            --accent: #8b6914; --accent-hover: #a07a1a; --accent-dim: rgba(139,105,20,0.1);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 14px; scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-main); background: var(--bg-primary);
+            color: var(--text-primary); line-height: 1.5; min-height: 100vh; overflow-x: hidden;
+        }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-heading); font-weight: 600; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        .app-header {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
+            background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
+            z-index: 100; display: flex; align-items: center;
+        }
+        .header-content {
+            width: 100%; padding: 0 1rem; display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon { font-size: 1.8rem; }
+        .logo-text h1 { font-size: 1.3rem; letter-spacing: 1px; line-height: 1.2; }
+        .logo-text .subtitle { font-size: 0.7rem; color: var(--text-muted); }
+        .header-right { display: flex; align-items: center; gap: 0.5rem; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+            padding: 0.5rem 1rem; border: 1px solid transparent; border-radius: var(--radius-sm);
+            font-family: var(--font-main); font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; transition: all var(--transition); white-space: nowrap; line-height: 1.4;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn .icon { font-size: 1rem; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+        .btn-lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+        .btn-full { width: 100%; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+        .btn-accent { background: var(--accent); color: #111; border-color: var(--accent); }
+        .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-color); }
+        .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        .app-main { display: flex; margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
+
+        .sidebar {
+            width: var(--sidebar-width); min-width: var(--sidebar-width);
+            background: var(--bg-secondary); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+            height: calc(100vh - var(--header-height)); position: sticky;
+            top: var(--header-height); overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 1rem; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .sidebar-header h2 { font-size: 0.95rem; }
+        .npc-count {
+            background: var(--accent-dim); color: var(--accent); padding: 0.15rem 0.5rem;
+            border-radius: 10px; font-size: 0.75rem; font-weight: 600;
+        }
+        .sidebar-search, .sidebar-filters { padding: 0.5rem 1rem; }
+        .input-search, .select-filter {
+            width: 100%; padding: 0.4rem 0.6rem; background: var(--bg-input);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: var(--font-main); font-size: 0.85rem;
+        }
+        .input-search:focus, .select-filter:focus { outline: none; border-color: var(--accent); }
+        .npc-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+        .npc-list-item {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem;
+            border-radius: var(--radius-sm); cursor: pointer; transition: background var(--transition);
+            border: 1px solid transparent; margin-bottom: 2px;
+        }
+        .npc-list-item:hover { background: var(--bg-hover); }
+        .npc-list-item.active { background: var(--accent-dim); border-color: var(--accent); }
+        .npc-list-thumb {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--bg-tertiary);
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
+            flex-shrink: 0; overflow: hidden;
+        }
+        .npc-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .npc-list-info { flex: 1; min-width: 0; }
+        .npc-list-name {
+            font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .npc-list-role { font-size: 0.7rem; color: var(--text-muted); }
+        .sidebar-actions {
+            padding: 0.5rem 1rem; border-top: 1px solid var(--border-light);
+            display: flex; flex-direction: column; gap: 0.3rem;
+        }
+        .sidebar-toggle {
+            display: none; position: fixed; bottom: 1rem; left: 1rem; z-index: 101;
+            width: 44px; height: 44px; border-radius: 50%; background: var(--accent);
+            color: #111; border: none; font-size: 1.2rem; cursor: pointer; box-shadow: var(--shadow-md);
+        }
+        .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-muted); }
+        .empty-state .empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+        .empty-state p { margin-bottom: 0.25rem; font-size: 0.85rem; }
+
+        .content { flex: 1; padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - var(--header-height)); }
+        .welcome-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+        .welcome-content { text-align: center; max-width: 500px; }
+        .welcome-icon { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        .welcome-content h2 { font-size: 1.8rem; margin-bottom: 0.75rem; }
+        .welcome-content p { color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .welcome-content .btn { margin-top: 1.5rem; }
+        .text-muted { color: var(--text-muted) !important; }
+        .text-xs { font-size: 0.7rem; }
+
+        .npc-editor { max-width: 900px; margin: 0 auto; }
+        .editor-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 0; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-light);
+            flex-wrap: wrap; gap: 0.5rem;
+        }
+        .editor-title { font-size: 1.2rem; }
+        .toolbar-right { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .editor-tabs {
+            display: flex; gap: 2px; margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-light); overflow-x: auto;
+        }
+        .tab {
+            padding: 0.6rem 1rem; background: transparent; border: none;
+            color: var(--text-muted); cursor: pointer; font-family: var(--font-main);
+            font-size: 0.85rem; font-weight: 500; white-space: nowrap;
+            border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all var(--transition);
+        }
+        .tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-panel { padding: 0.5rem 0; }
+
+        .form-section {
+            margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-card);
+            border: 1px solid var(--border-light); border-radius: var(--radius-md);
+        }
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .section-header h3 { font-size: 1rem; }
+        .section-actions { display: flex; gap: 0.3rem; }
+        .section-hint { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; font-style: italic; }
+        .form-row { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+        .form-group.flex-grow { flex: 1; }
+        .form-group label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
+        .form-input, .form-textarea {
+            padding: 0.5rem 0.6rem; background: var(--bg-input);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: var(--font-main); font-size: 0.9rem;
+            transition: border-color var(--transition);
+        }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        select.form-input { cursor: pointer; }
+        .input-with-btn { display: flex; gap: 0.3rem; }
+        .input-with-btn .form-input { flex: 1; }
+
+        .basic-layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+        .portrait-section { flex-shrink: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+        .portrait-frame {
+            width: 180px; height: 180px; border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color var(--transition); background: var(--bg-tertiary);
+        }
+        .portrait-frame:hover { border-color: var(--accent); }
+        .portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+        .portrait-placeholder { text-align: center; color: var(--text-muted); }
+        .portrait-placeholder span { font-size: 2rem; display: block; margin-bottom: 0.3rem; }
+        .portrait-placeholder p { font-size: 0.75rem; }
+        .basic-info { flex: 1; min-width: 0; }
+
+        .attributes-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;
+        }
+        .attr-card {
+            background: var(--bg-tertiary); border: 1px solid var(--border-light);
+            border-radius: var(--radius-md); padding: 0.75rem; text-align: center;
+            display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+        }
+        .attr-card label { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+        .attr-label { font-size: 0.7rem; color: var(--text-muted); }
+        .attr-input {
+            width: 70px; text-align: center; padding: 0.4rem; background: var(--bg-input);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600;
+        }
+        .attr-input:focus { outline: none; border-color: var(--accent); }
+        .attr-luck { border-color: var(--accent-dim); }
+
+        .derived-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem;
+        }
+        .derived-card {
+            background: var(--bg-tertiary); border: 1px solid var(--border-light);
+            border-radius: var(--radius-md); padding: 0.75rem; text-align: center;
+            display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+        }
+        .derived-card label { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+        .derived-label { font-size: 0.7rem; color: var(--text-muted); }
+        .derived-values { display: flex; align-items: center; gap: 0.3rem; }
+        .derived-values span { color: var(--text-muted); }
+        .derived-input {
+            width: 50px; text-align: center; padding: 0.35rem; background: var(--bg-input);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: var(--font-mono); font-size: 1rem; font-weight: 600;
+        }
+        .derived-input:focus { outline: none; border-color: var(--accent); }
+
+        .trait-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .trait-tag {
+            padding: 0.35rem 0.75rem; border: 1px solid var(--border-color); border-radius: 20px;
+            font-size: 0.8rem; cursor: pointer; transition: all var(--transition);
+            color: var(--text-secondary); background: var(--bg-tertiary); user-select: none;
+        }
+        .trait-tag:hover { border-color: var(--accent); color: var(--text-primary); }
+        .trait-tag.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+        .skills-filter { margin-bottom: 1rem; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.4rem; }
+        .skill-row {
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem;
+            border-radius: var(--radius-sm); transition: background var(--transition);
+        }
+        .skill-row:hover { background: var(--bg-hover); }
+        .skill-row.occupation-skill { background: var(--accent-dim); border-left: 3px solid var(--accent); }
+        .skill-row.modified { background: rgba(74,124,89,0.1); }
+        .skill-row.hidden { display: none; }
+        .skill-name { flex: 1; font-size: 0.8rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .skill-base { font-size: 0.7rem; color: var(--text-muted); min-width: 30px; text-align: right; }
+        .skill-input {
+            width: 50px; text-align: center; padding: 0.25rem; background: var(--bg-input);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: var(--font-mono); font-size: 0.85rem;
+        }
+        .skill-input:focus { outline: none; border-color: var(--accent); }
+
+        .dynamic-item {
+            display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem;
+            background: var(--bg-tertiary); border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm); margin-bottom: 0.5rem;
+        }
+        .dynamic-item .item-fields { flex: 1; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .dynamic-item .item-fields .form-input { font-size: 0.8rem; padding: 0.3rem 0.5rem; }
+        .dynamic-item .item-fields .field-sm { width: 70px; }
+        .dynamic-item .item-fields .field-md { width: 120px; }
+        .dynamic-item .item-fields .field-lg { flex: 1; min-width: 120px; }
+        .dynamic-item .btn-remove {
+            flex-shrink: 0; width: 28px; height: 28px; padding: 0; font-size: 0.85rem;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .empty-inline { font-size: 0.8rem; color: var(--text-muted); font-style: italic; padding: 0.5rem 0; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+            display: flex; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); width: 100%; max-width: 500px; max-height: 80vh;
+            display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light);
+        }
+        .modal-header h3 { font-size: 1rem; }
+        .modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+        .modal-footer {
+            display: flex; justify-content: flex-end; gap: 0.5rem;
+            padding: 1rem 1.25rem; border-top: 1px solid var(--border-light);
+        }
+
+        .toast-container {
+            position: fixed; bottom: 1rem; right: 1rem; z-index: 300;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-md); font-size: 0.85rem;
+            max-width: 350px; animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .toast.toast-success { border-left: 3px solid var(--success); }
+        .toast.toast-error { border-left: 3px solid var(--danger); }
+        .toast.toast-info { border-left: 3px solid var(--info); }
+        .toast.removing { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(50px); } }
+
+        @media (max-width: 900px) {
+            .basic-layout { flex-direction: column; align-items: center; }
+            .portrait-frame { width: 150px; height: 150px; }
+            .attributes-grid { grid-template-columns: repeat(3, 1fr); }
+            .derived-grid { grid-template-columns: repeat(2, 1fr); }
+            .skills-grid { grid-template-columns: 1fr; }
+            .editor-toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-right { justify-content: flex-end; }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed; left: -100%; top: var(--header-height); z-index: 99;
+                width: 280px; min-width: 280px; transition: left 0.3s ease; box-shadow: var(--shadow-lg);
+            }
+            .sidebar.open { left: 0; }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .content { padding: 1rem; }
+            .form-row { flex-direction: column; }
+            .logo-text .subtitle { display: none; }
+        }
+        @media (max-width: 480px) {
+            .attributes-grid { grid-template-columns: repeat(2, 1fr); }
+            .tab { padding: 0.5rem 0.6rem; font-size: 0.75rem; }
+        }
+    </style>
 </head>
 <body>
-    <!-- HEADER -->
     <header class="app-header">
         <div class="header-content">
             <div class="header-left">
@@ -31,9 +400,7 @@
         </div>
     </header>
 
-    <!-- MAIN LAYOUT -->
     <main class="app-main">
-        <!-- SIDEBAR - Lista de NPCs -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>NPCs Criados</h2>
@@ -55,59 +422,41 @@
                 </div>
             </div>
             <div class="sidebar-actions">
-                <button class="btn btn-sm btn-ghost btn-full" id="btnExportAll" title="Exportar todos">
-                    📦 Exportar Todos
-                </button>
-                <button class="btn btn-sm btn-ghost btn-full" id="btnImportNpcs" title="Importar NPCs">
-                    📥 Importar NPCs
-                </button>
+                <button class="btn btn-sm btn-ghost btn-full" id="btnExportAll">📦 Exportar Todos</button>
+                <button class="btn btn-sm btn-ghost btn-full" id="btnImportNpcs">📥 Importar NPCs</button>
                 <input type="file" id="importFileInput" accept=".json" style="display:none">
             </div>
         </aside>
 
-        <!-- TOGGLE SIDEBAR MOBILE -->
         <button class="sidebar-toggle" id="sidebarToggle">☰</button>
 
-        <!-- CONTENT AREA -->
         <section class="content" id="contentArea">
-            <!-- WELCOME SCREEN -->
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-content">
                     <span class="welcome-icon">🐙</span>
                     <h2>Bem-vindo ao NPCKeeper</h2>
                     <p>Crie NPCs completos e consistentes para suas sessões de Chamado de Cthulhu.</p>
-                    <p class="text-muted">Cada NPC gerado pode ser exportado em JSON compatível com o CallKeeper.</p>
+                    <p class="text-muted">Cada NPC pode ser exportado em JSON compatível com o CallKeeper.</p>
                     <button class="btn btn-primary btn-lg" id="btnWelcomeNew">
                         <span class="icon">+</span> Criar Primeiro NPC
                     </button>
                 </div>
             </div>
 
-            <!-- NPC EDITOR -->
             <div class="npc-editor" id="npcEditor" style="display:none">
                 <form id="npcForm" autocomplete="off">
-                    <!-- EDITOR TOOLBAR -->
                     <div class="editor-toolbar">
                         <div class="toolbar-left">
                             <h2 class="editor-title" id="editorTitle">Novo NPC</h2>
                         </div>
                         <div class="toolbar-right">
-                            <button type="button" class="btn btn-sm btn-accent" id="btnGenerateAll">
-                                🎲 Gerar Tudo
-                            </button>
-                            <button type="button" class="btn btn-sm btn-success" id="btnSaveNpc">
-                                💾 Salvar
-                            </button>
-                            <button type="button" class="btn btn-sm btn-ghost" id="btnExportNpc">
-                                📤 Exportar JSON
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" id="btnDeleteNpc" style="display:none">
-                                🗑️ Excluir
-                            </button>
+                            <button type="button" class="btn btn-sm btn-accent" id="btnGenerateAll">🎲 Gerar Tudo</button>
+                            <button type="button" class="btn btn-sm btn-success" id="btnSaveNpc">💾 Salvar</button>
+                            <button type="button" class="btn btn-sm btn-ghost" id="btnExportNpc">📤 Exportar</button>
+                            <button type="button" class="btn btn-sm btn-danger" id="btnDeleteNpc" style="display:none">🗑️ Excluir</button>
                         </div>
                     </div>
 
-                    <!-- EDITOR TABS -->
                     <div class="editor-tabs">
                         <button type="button" class="tab active" data-tab="tab-basic">📝 Básico</button>
                         <button type="button" class="tab" data-tab="tab-narrative">📖 Narrativa</button>
@@ -117,45 +466,39 @@
                         <button type="button" class="tab" data-tab="tab-extras">📎 Extras</button>
                     </div>
 
-                    <!-- TAB: BÁSICO -->
+                    <!-- TAB BASIC -->
                     <div class="tab-content active" id="tab-basic">
                         <div class="tab-panel">
                             <div class="basic-layout">
-                                <!-- Portrait -->
                                 <div class="portrait-section">
                                     <div class="portrait-frame" id="portraitFrame">
-                                        <img src="" alt="Retrato" id="portraitPreview" style="display:none">
+                                        <img src="" alt="" id="portraitPreview" style="display:none">
                                         <div class="portrait-placeholder" id="portraitPlaceholder">
                                             <span>📷</span>
-                                            <p>Clique para enviar foto</p>
+                                            <p>Clique para foto</p>
                                             <p class="text-xs">512×512 recomendado</p>
                                         </div>
                                         <input type="file" id="portraitInput" accept="image/*" style="display:none">
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-ghost btn-full" id="btnRemovePortrait" style="display:none">
-                                        Remover Foto
-                                    </button>
+                                    <button type="button" class="btn btn-sm btn-ghost btn-full" id="btnRemovePortrait" style="display:none">Remover Foto</button>
                                 </div>
-
-                                <!-- Basic Info -->
                                 <div class="basic-info">
                                     <div class="form-row">
                                         <div class="form-group flex-grow">
-                                            <label for="npcName">Nome</label>
+                                            <label>Nome</label>
                                             <div class="input-with-btn">
                                                 <input type="text" id="npcName" class="form-input" placeholder="Nome do NPC">
                                                 <button type="button" class="btn btn-sm btn-ghost" id="btnGenName" title="Gerar nome">🎲</button>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="npcAge">Idade</label>
+                                            <label>Idade</label>
                                             <input type="number" id="npcAge" class="form-input" placeholder="30" min="1" max="120">
                                         </div>
                                         <div class="form-group">
-                                            <label for="npcSex">Sexo</label>
+                                            <label>Sexo</label>
                                             <select id="npcSex" class="form-input">
                                                 <option value="">— Opcional —</option>
                                                 <option value="Masculino">Masculino</option>
@@ -164,35 +507,27 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="form-row">
                                         <div class="form-group flex-grow">
-                                            <label for="npcOccupation">Profissão</label>
-                                            <select id="npcOccupation" class="form-input">
-                                                <option value="">— Selecione —</option>
-                                            </select>
+                                            <label>Profissão</label>
+                                            <select id="npcOccupation" class="form-input"><option value="">— Selecione —</option></select>
                                         </div>
                                     </div>
-
                                     <div class="form-row">
                                         <div class="form-group flex-grow">
-                                            <label for="npcRole">Papel Narrativo</label>
-                                            <select id="npcRole" class="form-input">
-                                                <option value="">— Selecione —</option>
-                                            </select>
+                                            <label>Papel Narrativo</label>
+                                            <select id="npcRole" class="form-input"><option value="">— Selecione —</option></select>
                                         </div>
                                     </div>
-
                                     <div class="form-row">
                                         <div class="form-group flex-grow">
-                                            <label for="npcResidence">Residência</label>
+                                            <label>Residência</label>
                                             <input type="text" id="npcResidence" class="form-input" placeholder="Arkham, Massachusetts">
                                         </div>
                                     </div>
-
                                     <div class="form-row">
                                         <div class="form-group flex-grow">
-                                            <label for="npcBirthplace">Local de Nascimento</label>
+                                            <label>Local de Nascimento</label>
                                             <input type="text" id="npcBirthplace" class="form-input" placeholder="Boston, Massachusetts">
                                         </div>
                                     </div>
@@ -201,21 +536,16 @@
                         </div>
                     </div>
 
-                    <!-- TAB: NARRATIVA -->
+                    <!-- TAB NARRATIVE -->
                     <div class="tab-content" id="tab-narrative">
                         <div class="tab-panel">
-                            <!-- Personalidade -->
                             <div class="form-section">
                                 <div class="section-header">
                                     <h3>Personalidade</h3>
                                     <button type="button" class="btn btn-sm btn-ghost" id="btnGenPersonality">🎲 Gerar</button>
                                 </div>
-                                <div class="trait-grid" id="personalityGrid">
-                                    <!-- Gerado via JS -->
-                                </div>
+                                <div class="trait-grid" id="personalityGrid"></div>
                             </div>
-
-                            <!-- Objetivo -->
                             <div class="form-section">
                                 <div class="section-header">
                                     <h3>Objetivo</h3>
@@ -223,8 +553,6 @@
                                 </div>
                                 <textarea id="npcObjective" class="form-textarea" rows="3" placeholder="O que move este personagem?"></textarea>
                             </div>
-
-                            <!-- Segredo -->
                             <div class="form-section">
                                 <div class="section-header">
                                     <h3>Segredo</h3>
@@ -232,34 +560,22 @@
                                 </div>
                                 <textarea id="npcSecret" class="form-textarea" rows="3" placeholder="O que este NPC esconde?"></textarea>
                             </div>
-
-                            <!-- Ligação com o Caso -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Ligação com o Caso</h3>
-                                </div>
+                                <div class="section-header"><h3>Ligação com o Caso</h3></div>
                                 <textarea id="npcCaseLink" class="form-textarea" rows="3" placeholder="Por que este NPC faz parte da investigação?"></textarea>
                             </div>
-
-                            <!-- Descrição Pessoal -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Descrição Pessoal</h3>
-                                </div>
-                                <textarea id="npcDescription" class="form-textarea" rows="4" placeholder="Aparência, maneirismos, forma de falar..."></textarea>
+                                <div class="section-header"><h3>Descrição Pessoal</h3></div>
+                                <textarea id="npcDescription" class="form-textarea" rows="4" placeholder="Aparência, maneirismos..."></textarea>
                             </div>
-
-                            <!-- Background -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Background</h3>
-                                </div>
-                                <textarea id="npcBackstory" class="form-textarea" rows="5" placeholder="História pregressa do personagem..."></textarea>
+                                <div class="section-header"><h3>Background</h3></div>
+                                <textarea id="npcBackstory" class="form-textarea" rows="5" placeholder="História pregressa..."></textarea>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB: ATRIBUTOS -->
+                    <!-- TAB ATTRIBUTES -->
                     <div class="tab-content" id="tab-attributes">
                         <div class="tab-panel">
                             <div class="form-section">
@@ -270,194 +586,83 @@
                                         <button type="button" class="btn btn-sm btn-ghost" id="btnResetAttributes">↺ Resetar</button>
                                     </div>
                                 </div>
-                                <p class="section-hint">Os valores são influenciados pela profissão selecionada ao gerar automaticamente.</p>
-
+                                <p class="section-hint">Valores influenciados pela profissão ao gerar automaticamente.</p>
                                 <div class="attributes-grid">
-                                    <div class="attr-card">
-                                        <label>FOR</label>
-                                        <span class="attr-label">Força</span>
-                                        <input type="number" id="attrSTR" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>CON</label>
-                                        <span class="attr-label">Constituição</span>
-                                        <input type="number" id="attrCON" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>TAM</label>
-                                        <span class="attr-label">Tamanho</span>
-                                        <input type="number" id="attrSIZ" class="attr-input" min="1" max="99" value="60">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>DES</label>
-                                        <span class="attr-label">Destreza</span>
-                                        <input type="number" id="attrDEX" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>APA</label>
-                                        <span class="attr-label">Aparência</span>
-                                        <input type="number" id="attrAPP" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>INT</label>
-                                        <span class="attr-label">Inteligência</span>
-                                        <input type="number" id="attrINT" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>POD</label>
-                                        <span class="attr-label">Poder</span>
-                                        <input type="number" id="attrPOW" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card">
-                                        <label>EDU</label>
-                                        <span class="attr-label">Educação</span>
-                                        <input type="number" id="attrEDU" class="attr-input" min="1" max="99" value="50">
-                                    </div>
-                                    <div class="attr-card attr-luck">
-                                        <label>SOR</label>
-                                        <span class="attr-label">Sorte</span>
-                                        <input type="number" id="attrLuck" class="attr-input" min="1" max="99" value="50">
-                                    </div>
+                                    <div class="attr-card"><label>FOR</label><span class="attr-label">Força</span><input type="number" id="attrSTR" class="attr-input" min="1" max="99" value="50"></div>
+                                    <div class="attr-card"><label>CON</label><span class="attr-label">Constituição</span><input type="number" id="attrCON" class="attr-input" min="1" max="99" value="50"></div>
+                                    <div class="attr-card"><label>TAM</label><span class="attr-label">Tamanho</span><input type="number" id="attrSIZ" class="attr-input" min="1" max="99" value="60"></div>
+                                    <div class="attr-card"><label>DES</label><span class="attr-label">Destreza</span><input type="number" id="attrDEX" class="attr-input" min="1" max="99" value="50"></div>
+                                    <div class="attr-card"><label>APA</label><span class="attr-label">Aparência</span><input type="number" id="attrAPP" class="attr-input" min="1" max="99" value="50"></div>
+                                    <div class="attr-card"><label>INT</label><span class="attr-label">Inteligência</span><input type="number" id="attrINT" class="attr-input" min="1" max="99" value="60"></div>
+                                    <div class="attr-card"><label>POD</label><span class="attr-label">Poder</span><input type="number" id="attrPOW" class="attr-input" min="1" max="99" value="50"></div>
+                                    <div class="attr-card"><label>EDU</label><span class="attr-label">Educação</span><input type="number" id="attrEDU" class="attr-input" min="1" max="99" value="60"></div>
+                                    <div class="attr-card attr-luck"><label>SOR</label><span class="attr-label">Sorte</span><input type="number" id="attrLuck" class="attr-input" min="1" max="99" value="50"></div>
                                 </div>
                             </div>
-
-                            <!-- Derived Stats -->
                             <div class="form-section">
                                 <div class="section-header">
                                     <h3>Valores Derivados</h3>
                                     <button type="button" class="btn btn-sm btn-ghost" id="btnCalcDerived">⚙️ Calcular</button>
                                 </div>
                                 <div class="derived-grid">
-                                    <div class="derived-card">
-                                        <label>PV</label>
-                                        <span class="derived-label">Pontos de Vida</span>
-                                        <div class="derived-values">
-                                            <input type="number" id="hpMax" class="derived-input" min="0" max="99" value="11">
-                                            <span>/</span>
-                                            <input type="number" id="hpCurrent" class="derived-input" min="0" max="99" value="11">
-                                        </div>
-                                    </div>
-                                    <div class="derived-card">
-                                        <label>PM</label>
-                                        <span class="derived-label">Pontos de Magia</span>
-                                        <div class="derived-values">
-                                            <input type="number" id="mpMax" class="derived-input" min="0" max="99" value="10">
-                                            <span>/</span>
-                                            <input type="number" id="mpCurrent" class="derived-input" min="0" max="99" value="10">
-                                        </div>
-                                    </div>
-                                    <div class="derived-card">
-                                        <label>SAN</label>
-                                        <span class="derived-label">Sanidade</span>
-                                        <div class="derived-values">
-                                            <input type="number" id="sanMax" class="derived-input" min="0" max="99" value="50">
-                                            <span>/</span>
-                                            <input type="number" id="sanCurrent" class="derived-input" min="0" max="99" value="50">
-                                        </div>
-                                    </div>
-                                    <div class="derived-card">
-                                        <label>MOV</label>
-                                        <span class="derived-label">Movimento</span>
-                                        <input type="number" id="move" class="derived-input" min="0" max="20" value="8">
-                                    </div>
-                                    <div class="derived-card">
-                                        <label>BD</label>
-                                        <span class="derived-label">Bon. de Dano</span>
-                                        <input type="text" id="bonusDamage" class="derived-input" value="0" readonly>
-                                    </div>
-                                    <div class="derived-card">
-                                        <label>Corpo</label>
-                                        <span class="derived-label">Corpulência</span>
-                                        <input type="number" id="build" class="derived-input" min="-2" max="6" value="0" readonly>
-                                    </div>
+                                    <div class="derived-card"><label>PV</label><span class="derived-label">Pontos de Vida</span><div class="derived-values"><input type="number" id="hpMax" class="derived-input" value="11"><span>/</span><input type="number" id="hpCurrent" class="derived-input" value="11"></div></div>
+                                    <div class="derived-card"><label>PM</label><span class="derived-label">Pontos de Magia</span><div class="derived-values"><input type="number" id="mpMax" class="derived-input" value="10"><span>/</span><input type="number" id="mpCurrent" class="derived-input" value="10"></div></div>
+                                    <div class="derived-card"><label>SAN</label><span class="derived-label">Sanidade</span><div class="derived-values"><input type="number" id="sanMax" class="derived-input" value="50"><span>/</span><input type="number" id="sanCurrent" class="derived-input" value="50"></div></div>
+                                    <div class="derived-card"><label>MOV</label><span class="derived-label">Movimento</span><input type="number" id="move" class="derived-input" value="8"></div>
+                                    <div class="derived-card"><label>BD</label><span class="derived-label">Bônus de Dano</span><input type="text" id="bonusDamage" class="derived-input" value="0" readonly></div>
+                                    <div class="derived-card"><label>Corpo</label><span class="derived-label">Corpulência</span><input type="number" id="build" class="derived-input" value="0" readonly></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB: PERÍCIAS -->
+                    <!-- TAB SKILLS -->
                     <div class="tab-content" id="tab-skills">
                         <div class="tab-panel">
                             <div class="form-section">
                                 <div class="section-header">
                                     <h3>Perícias</h3>
                                     <div class="section-actions">
-                                        <button type="button" class="btn btn-sm btn-ghost" id="btnGenSkills">🎲 Gerar por Profissão</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" id="btnGenSkills">🎲 Gerar</button>
                                         <button type="button" class="btn btn-sm btn-ghost" id="btnResetSkills">↺ Resetar</button>
                                         <button type="button" class="btn btn-sm btn-ghost" id="btnToggleModified">👁️ Só Modificadas</button>
                                     </div>
                                 </div>
-                                <p class="section-hint">Perícias da profissão são destacadas. Clique em 🎲 para gerar valores coerentes com a profissão.</p>
-
-                                <div class="skills-filter">
-                                    <input type="text" id="searchSkill" class="input-search" placeholder="Buscar perícia...">
-                                </div>
-
-                                <div class="skills-grid" id="skillsGrid">
-                                    <!-- Gerado via JS -->
-                                </div>
+                                <p class="section-hint">Perícias da profissão são destacadas.</p>
+                                <div class="skills-filter"><input type="text" id="searchSkill" class="input-search" placeholder="Buscar perícia..."></div>
+                                <div class="skills-grid" id="skillsGrid"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB: COMBATE -->
+                    <!-- TAB COMBAT -->
                     <div class="tab-content" id="tab-combat">
                         <div class="tab-panel">
-                            <!-- Armas -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Armas</h3>
-                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddWeapon">+ Adicionar</button>
-                                </div>
-                                <div class="weapons-list" id="weaponsList">
-                                    <div class="empty-inline">Nenhuma arma adicionada.</div>
-                                </div>
+                                <div class="section-header"><h3>Armas</h3><button type="button" class="btn btn-sm btn-ghost" id="btnAddWeapon">+ Adicionar</button></div>
+                                <div id="weaponsList"><div class="empty-inline">Nenhuma arma adicionada.</div></div>
                             </div>
-
-                            <!-- Inventário -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Inventário</h3>
-                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddItem">+ Adicionar</button>
-                                </div>
-                                <div class="inventory-list" id="inventoryList">
-                                    <div class="empty-inline">Nenhum item no inventário.</div>
-                                </div>
+                                <div class="section-header"><h3>Inventário</h3><button type="button" class="btn btn-sm btn-ghost" id="btnAddItem">+ Adicionar</button></div>
+                                <div id="inventoryList"><div class="empty-inline">Nenhum item.</div></div>
                             </div>
-
-                            <!-- Magias -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Magias / Rituais</h3>
-                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddSpell">+ Adicionar</button>
-                                </div>
-                                <div class="spells-list" id="spellsList">
-                                    <div class="empty-inline">Nenhuma magia conhecida.</div>
-                                </div>
+                                <div class="section-header"><h3>Magias / Rituais</h3><button type="button" class="btn btn-sm btn-ghost" id="btnAddSpell">+ Adicionar</button></div>
+                                <div id="spellsList"><div class="empty-inline">Nenhuma magia.</div></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB: EXTRAS -->
+                    <!-- TAB EXTRAS -->
                     <div class="tab-content" id="tab-extras">
                         <div class="tab-panel">
-                            <!-- Relações -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Relações</h3>
-                                    <button type="button" class="btn btn-sm btn-ghost" id="btnAddRelation">+ Adicionar</button>
-                                </div>
-                                <div class="relations-list" id="relationsList">
-                                    <div class="empty-inline">Nenhuma relação adicionada.</div>
-                                </div>
+                                <div class="section-header"><h3>Relações</h3><button type="button" class="btn btn-sm btn-ghost" id="btnAddRelation">+ Adicionar</button></div>
+                                <div id="relationsList"><div class="empty-inline">Nenhuma relação.</div></div>
                             </div>
-
-                            <!-- Notas -->
                             <div class="form-section">
-                                <div class="section-header">
-                                    <h3>Notas do Guardião</h3>
-                                </div>
-                                <textarea id="npcNotes" class="form-textarea" rows="6" placeholder="Anotações livres sobre o NPC..."></textarea>
+                                <div class="section-header"><h3>Notas do Guardião</h3></div>
+                                <textarea id="npcNotes" class="form-textarea" rows="6" placeholder="Anotações livres..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -466,44 +671,772 @@
         </section>
     </main>
 
-    <!-- MODAL -->
     <div class="modal-overlay" id="modalOverlay" style="display:none">
         <div class="modal" id="modal">
             <div class="modal-header">
                 <h3 id="modalTitle">Modal</h3>
-                <button type="button" class="btn btn-sm btn-ghost modal-close" id="modalClose">✕</button>
+                <button type="button" class="btn btn-sm btn-ghost" id="modalClose">✕</button>
             </div>
-            <div class="modal-body" id="modalBody">
-            </div>
-            <div class="modal-footer" id="modalFooter">
-            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
         </div>
     </div>
 
-    <!-- TOAST -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- SCRIPTS -->
-    <script src="js/data/names.js"></script>
-    <script src="js/data/occupations.js"></script>
-    <script src="js/data/skills.js"></script>
-    <script src="js/data/personality.js"></script>
-    <script src="js/data/secrets.js"></script>
-    <script src="js/data/objectives.js"></script>
-    <script src="js/data/roles.js"></script>
-    <script src="js/generators/attributeGenerator.js"></script>
-    <script src="js/generators/skillGenerator.js"></script>
-    <script src="js/generators/nameGenerator.js"></script>
-    <script src="js/generators/narrativeGenerator.js"></script>
-    <script src="js/generators/npcGenerator.js"></script>
-    <script src="js/managers/storageManager.js"></script>
-    <script src="js/managers/exportManager.js"></script>
-    <script src="js/managers/npcManager.js"></script>
-    <script src="js/ui/modalHandler.js"></script>
-    <script src="js/ui/portraitHandler.js"></script>
-    <script src="js/ui/listHandler.js"></script>
-    <script src="js/ui/formHandler.js"></script>
-    <script src="js/ui/themeHandler.js"></script>
-    <script src="js/app.js"></script>
+<script>
+// ==============================
+// DATA
+// ==============================
+const NPC_NAMES = {
+    male: {
+        first: ["Albert","Alfred","Arthur","Benjamin","Bernard","Carl","Cecil","Charles","Chester","Clarence","Clifford","Daniel","Donald","Douglas","Earl","Edgar","Edmund","Edward","Edwin","Elmer","Ernest","Eugene","Floyd","Francis","Frank","Frederick","George","Gilbert","Gordon","Harold","Harry","Harvey","Henry","Herbert","Herman","Howard","Hubert","Hugh","Irving","Jack","James","John","Joseph","Kenneth","Lawrence","Leonard","Leo","Lester","Lewis","Lloyd","Louis","Luther","Malcolm","Martin","Melvin","Milton","Morris","Nathan","Nathaniel","Nelson","Norman","Oliver","Oscar","Otto","Patrick","Paul","Percy","Peter","Philip","Ralph","Raymond","Richard","Robert","Roger","Roland","Roy","Russell","Samuel","Stanley","Theodore","Thomas","Vernon","Victor","Walter","Warren","Wesley","Wilbur","William","Willis","Winston","Woodrow","Archibald","Bartholomew","Cornelius","Desmond","Elliot","Everett","Fletcher","Gideon","Harrison","Jasper","Montague","Oswald","Percival","Reginald","Sebastian","Thaddeus","Tobias","Wallace","Xavier"],
+        last: ["Adams","Allen","Anderson","Baker","Barnes","Bell","Bennett","Bishop","Black","Blake","Bowman","Bradley","Brooks","Brown","Burke","Burns","Burton","Butler","Campbell","Carter","Chapman","Clark","Cole","Collins","Cooper","Cox","Crawford","Cross","Curtis","Davis","Dixon","Douglas","Drake","Duncan","Edwards","Ellis","Evans","Ferguson","Fisher","Fletcher","Ford","Foster","Fox","Franklin","Gardner","Gibson","Gordon","Graham","Grant","Gray","Green","Griffin","Hall","Hamilton","Harper","Harris","Harrison","Hart","Harvey","Hayes","Henderson","Hill","Holland","Holmes","Hopkins","Howard","Hudson","Hughes","Hunt","Hunter","Jackson","James","Jenkins","Johnson","Jones","Kelly","Kennedy","King","Knight","Lawrence","Lee","Lewis","Long","Marshall","Martin","Mason","Miller","Mitchell","Moore","Morgan","Morris","Murphy","Murray","Nelson","Newman","Norton","Palmer","Parker","Patterson","Perry","Phillips","Pierce","Porter","Powell","Price","Reed","Reynolds","Richards","Richardson","Robinson","Rogers","Ross","Russell","Scott","Shaw","Sheldon","Simmons","Simpson","Smith","Spencer","Stanley","Stevens","Stewart","Stone","Sullivan","Taylor","Thomas","Thompson","Turner","Walker","Wallace","Walsh","Ward","Warren","Watson","Webb","Wells","West","White","Williams","Wilson","Wood","Wright","Young","Ashworth","Blackwood","Carmichael","Davenport","Everhart","Fairbanks","Grayson","Hawthorne","Langley","Mercer","Northcott","Pemberton","Sinclair","Thornton","Whitmore","Winslow"]
+    },
+    female: {
+        first: ["Ada","Agnes","Alice","Alma","Anna","Annie","Beatrice","Bernice","Bertha","Bessie","Betty","Blanche","Caroline","Catherine","Charlotte","Clara","Cora","Daisy","Dorothy","Edith","Edna","Eleanor","Elizabeth","Ellen","Elsie","Emily","Emma","Esther","Ethel","Eva","Evelyn","Faye","Flora","Florence","Frances","Gertrude","Gladys","Grace","Gwendolyn","Harriet","Hazel","Helen","Ida","Irene","Isabel","Jane","Jean","Josephine","Julia","Katherine","Laura","Lavinia","Lena","Lillian","Louise","Lucille","Lucy","Mabel","Margaret","Marion","Martha","Mary","Maud","Mildred","Minnie","Miriam","Myrtle","Nellie","Nora","Olive","Pearl","Phyllis","Rebecca","Rose","Ruby","Ruth","Sarah","Stella","Sylvia","Thelma","Vera","Viola","Violet","Virginia","Winifred","Abigail","Adelaide","Arabella","Cecilia","Cordelia","Constance","Daphne","Eloise","Genevieve","Henrietta","Imogen","Josephina","Leonora","Millicent","Prudence"]
+    }
+};
+
+const OCCUPATIONS = {
+    "Antiquário":{skills:["Avaliação","Arte/Ofício","História","Biblioteca","Outra Língua","Mundo Natural","Charme","Persuasão"],creditMin:30,creditMax:70,attrTendency:{EDU:"high",INT:"high",FOR:"low"}},
+    "Artista":{skills:["Arte/Ofício","Charme","Escutar","Persuasão","Psicologia","Fotografia","História","Outra Língua"],creditMin:9,creditMax:50,attrTendency:{APA:"high",POD:"high",DES:"mid"}},
+    "Atleta":{skills:["Escalar","Saltar","Arremessar","Nadar","Esquivar","Lutar (Briga)","Cavalgar","Primeiros Socorros"],creditMin:9,creditMax:70,attrTendency:{FOR:"high",CON:"high",DES:"high",EDU:"low"}},
+    "Autor":{skills:["Arte/Ofício","Psicologia","História","Biblioteca","Outra Língua","Língua Própria","Persuasão","Ocultismo"],creditMin:9,creditMax:30,attrTendency:{EDU:"high",INT:"high",APA:"mid"}},
+    "Bibliotecário":{skills:["Biblioteca","Outra Língua","Língua Própria","Contabilidade","História","Charme","Persuasão"],creditMin:9,creditMax:35,attrTendency:{EDU:"high",INT:"high",FOR:"low"}},
+    "Clérigo":{skills:["Contabilidade","História","Biblioteca","Escutar","Outra Língua","Persuasão","Psicologia","Charme"],creditMin:9,creditMax:60,attrTendency:{EDU:"high",POD:"high",APA:"mid"}},
+    "Criminoso":{skills:["Arte/Ofício","Disfarce","Intimidação","Lutar (Briga)","Furtividade","Encontrar","Psicologia","Lábia"],creditMin:5,creditMax:65,attrTendency:{DES:"high",FOR:"mid",INT:"mid",EDU:"low"}},
+    "Detetive Particular":{skills:["Direito","Biblioteca","Encontrar","Fotografia","Disfarce","Intimidação","Psicologia","Furtividade"],creditMin:9,creditMax:30,attrTendency:{INT:"high",DES:"mid",APA:"mid"}},
+    "Diletante":{skills:["Arte/Ofício","Charme","Armas de Fogo","Outra Língua","Cavalgar","Persuasão","Psicologia"],creditMin:50,creditMax:99,attrTendency:{APA:"high",EDU:"mid",INT:"mid"}},
+    "Engenheiro":{skills:["Arte/Ofício","Ciência (Engenharia)","Ciência (Física)","Eletricidade","Biblioteca","Operar Maquinário","Mecânica","Encontrar"],creditMin:30,creditMax:60,attrTendency:{EDU:"high",INT:"high",DES:"mid"}},
+    "Fazendeiro":{skills:["Arte/Ofício","Mecânica","Mundo Natural","Operar Maquinário","Rastrear","Encontrar","Armas de Fogo","Primeiros Socorros"],creditMin:9,creditMax:30,attrTendency:{FOR:"high",CON:"high",DES:"mid",EDU:"low"}},
+    "Jornalista":{skills:["Arte/Ofício","Persuasão","Escutar","Biblioteca","Psicologia","Fotografia","Charme","História"],creditMin:9,creditMax:30,attrTendency:{EDU:"mid",INT:"high",APA:"mid"}},
+    "Médico":{skills:["Primeiros Socorros","Medicina","Ciência (Biologia)","Ciência (Farmacologia)","Psicologia","Outra Língua","Biblioteca","Persuasão"],creditMin:30,creditMax:80,attrTendency:{EDU:"high",INT:"high",POD:"mid"}},
+    "Militar (Oficial)":{skills:["Charme","Contabilidade","Armas de Fogo","Intimidação","Navegação","Persuasão","Psicologia","Lutar (Briga)"],creditMin:20,creditMax:50,attrTendency:{FOR:"high",CON:"high",INT:"mid",DES:"mid"}},
+    "Militar (Soldado)":{skills:["Esquivar","Lutar (Briga)","Armas de Fogo","Furtividade","Escalar","Primeiros Socorros","Nadar","Sobrevivência"],creditMin:9,creditMax:30,attrTendency:{FOR:"high",CON:"high",DES:"high",EDU:"low"}},
+    "Motorista":{skills:["Dirigir Automóvel","Eletricidade","Escutar","Mecânica","Navegação","Encontrar","Lutar (Briga)","Psicologia"],creditMin:9,creditMax:20,attrTendency:{DES:"high",CON:"mid",FOR:"mid"}},
+    "Músico":{skills:["Arte/Ofício","Charme","Escutar","Persuasão","Psicologia","Avaliação","Outra Língua","Contabilidade"],creditMin:9,creditMax:30,attrTendency:{APA:"high",DES:"mid",POD:"mid"}},
+    "Parapsicólogo":{skills:["Ocultismo","Psicologia","Fotografia","Biblioteca","Antropologia","História","Outra Língua","Arte/Ofício"],creditMin:9,creditMax:30,attrTendency:{EDU:"high",POD:"high",INT:"high"}},
+    "Policial":{skills:["Armas de Fogo","Direito","Escutar","Encontrar","Lutar (Briga)","Intimidação","Persuasão","Psicologia"],creditMin:9,creditMax:30,attrTendency:{FOR:"high",CON:"high",DES:"high",EDU:"low"}},
+    "Professor":{skills:["Biblioteca","Outra Língua","Língua Própria","Psicologia","História","Persuasão","Antropologia"],creditMin:20,creditMax:50,attrTendency:{EDU:"high",INT:"high",FOR:"low"}},
+    "Vagabundo":{skills:["Arte/Ofício","Escalar","Saltar","Escutar","Encontrar","Furtividade","Mundo Natural","Lutar (Briga)"],creditMin:0,creditMax:5,attrTendency:{CON:"high",DES:"mid",FOR:"mid",EDU:"low"}},
+    "Advogado":{skills:["Direito","Contabilidade","Biblioteca","Persuasão","Charme","Intimidação","Psicologia","Língua Própria"],creditMin:30,creditMax:80,attrTendency:{EDU:"high",INT:"high",APA:"mid"}},
+    "Arqueólogo":{skills:["Antropologia","História","Outra Língua","Biblioteca","Encontrar","Navegação","Escalar"],creditMin:10,creditMax:40,attrTendency:{EDU:"high",INT:"high",CON:"mid"}},
+    "Enfermeiro":{skills:["Primeiros Socorros","Medicina","Escutar","Psicologia","Ciência (Biologia)","Persuasão","Língua Própria","Encontrar"],creditMin:9,creditMax:30,attrTendency:{EDU:"mid",INT:"mid",POD:"mid",CON:"mid"}},
+    "Comerciante":{skills:["Avaliação","Contabilidade","Charme","Persuasão","Psicologia","Direito","Escutar","Língua Própria"],creditMin:20,creditMax:60,attrTendency:{APA:"high",INT:"mid",EDU:"mid"}},
+    "Marinheiro":{skills:["Nadar","Mecânica","Mundo Natural","Navegação","Escutar","Encontrar","Lutar (Briga)","Arremessar"],creditMin:5,creditMax:20,attrTendency:{FOR:"high",CON:"high",DES:"mid",EDU:"low"}},
+    "Cultista":{skills:["Ocultismo","Persuasão","Intimidação","Psicologia","História","Outra Língua","Furtividade","Encontrar"],creditMin:0,creditMax:40,attrTendency:{POD:"high",INT:"high",SOR:"low"}},
+    "Fotógrafo":{skills:["Fotografia","Arte/Ofício","Persuasão","Furtividade","Encontrar","Psicologia","Charme","Eletricidade"],creditMin:9,creditMax:30,attrTendency:{DES:"mid",INT:"mid",APA:"mid"}},
+    "Mecânico":{skills:["Mecânica","Dirigir Automóvel","Eletricidade","Operar Maquinário","Encontrar","Arte/Ofício","Lutar (Briga)","Intimidação"],creditMin:9,creditMax:30,attrTendency:{DES:"high",FOR:"mid",INT:"mid"}},
+    "Piloto":{skills:["Pilotar (Aeronave)","Eletricidade","Mecânica","Navegação","Operar Maquinário","Escutar"],creditMin:20,creditMax:70,attrTendency:{DES:"high",INT:"mid",CON:"mid"}}
+};
+
+const SKILLS_RAW = [
+    {name:"Antropologia",base:1},{name:"Armas de Fogo (Pistola)",base:20},{name:"Armas de Fogo (Rifle/Espingarda)",base:25},
+    {name:"Arremessar",base:20},{name:"Arte/Ofício",base:5},{name:"Avaliação",base:5},{name:"Cavalgar",base:5},
+    {name:"Charme",base:15},{name:"Ciência (Biologia)",base:1},{name:"Ciência (Engenharia)",base:1},
+    {name:"Ciência (Farmacologia)",base:1},{name:"Ciência (Física)",base:1},{name:"Ciência (Química)",base:1},
+    {name:"Contabilidade",base:5},{name:"Crédito",base:0},{name:"Direito",base:5},{name:"Dirigir Automóvel",base:20},
+    {name:"Disfarce",base:5},{name:"Eletricidade",base:10},{name:"Encontrar",base:25},{name:"Escalar",base:20},
+    {name:"Escutar",base:20},{name:"Esquivar",base:0,derived:"DEX_HALF"},{name:"Fotografia",base:5},
+    {name:"Furtividade",base:20},{name:"História",base:5},{name:"Intimidação",base:15},{name:"Lábia",base:5},
+    {name:"Língua Própria",base:0,derived:"EDU"},{name:"Lutar (Briga)",base:25},{name:"Mecânica",base:10},
+    {name:"Medicina",base:1},{name:"Mundo Natural",base:10},{name:"Navegação",base:10},{name:"Nadar",base:20},
+    {name:"Ocultismo",base:5},{name:"Operar Maquinário",base:1},{name:"Outra Língua",base:1},{name:"Persuasão",base:10},
+    {name:"Pilotar (Aeronave)",base:1},{name:"Pilotar (Barco)",base:1},{name:"Primeiros Socorros",base:30},
+    {name:"Psicanálise",base:1},{name:"Psicologia",base:10},{name:"Rastrear",base:10},{name:"Saltar",base:20},
+    {name:"Sobrevivência",base:10},{name:"Biblioteca",base:20},{name:"Armas de Fogo",base:20}
+];
+const SKILLS = [];
+const _seenSk = new Set();
+for (const s of SKILLS_RAW) { if (!_seenSk.has(s.name)) { _seenSk.add(s.name); SKILLS.push(s); } }
+SKILLS.sort((a,b) => a.name.localeCompare(b.name,'pt'));
+
+const PERSONALITY_TRAITS = ["Calmo","Nervoso","Mentiroso","Honesto","Arrogante","Humilde","Religioso","Cético","Medroso","Corajoso","Violento","Pacífico","Frio","Emotivo","Carismático","Reservado","Curioso","Apático","Obsessivo","Distraído","Gentil","Rude","Leal","Traiçoeiro","Otimista","Pessimista","Pragmático","Idealista","Paranoico","Confiante","Impulsivo","Calculista","Generoso","Ganancioso","Culto","Ignorante","Supersticioso","Racional","Solitário","Sociável","Vingativo","Piedoso","Ambicioso","Conformado","Manipulador","Ingênuo","Sarcástico","Sincero","Meticuloso","Desleixado","Teimoso","Flexível"];
+
+const NARRATIVE_ROLES = [
+    {id:"Testemunha",label:"Testemunha",icon:"👁️"},{id:"Suspeito",label:"Suspeito",icon:"🔍"},
+    {id:"Aliado",label:"Aliado",icon:"🤝"},{id:"Antagonista",label:"Antagonista",icon:"💀"},
+    {id:"Cultista",label:"Cultista",icon:"🕯️"},{id:"Investigador",label:"Investigador NPC",icon:"🔎"},
+    {id:"Sobrevivente",label:"Sobrevivente",icon:"🩸"},{id:"Civil",label:"Civil",icon:"🏠"},
+    {id:"Contato",label:"Contato",icon:"📞"},{id:"Familiar",label:"Familiar",icon:"👨‍👩‍👦"},
+    {id:"Vítima",label:"Vítima",icon:"⚰️"}
+];
+
+const SECRETS_DATA = {
+    general:["Matou alguém no passado e nunca foi descoberto.","Possui uma dívida impagável com pessoas perigosas.","Tem uma identidade falsa.","Testemunhou algo sobrenatural e tenta esquecer.","Mantém correspondência secreta com uma figura suspeita.","É viciado em ópio ou outra substância.","Roubou uma herança que não lhe pertencia.","Está sendo chantageado.","Traiu um amigo próximo por interesse.","Esconde uma doença grave.","Possui um livro proibido escondido.","Tem pesadelos com algo que não deveria existir.","Fez um pacto que não compreende.","Abandonou a família sob outro nome.","Esconde uma relação proibida.","Foi internado em sanatório e fugiu.","Presenciou um ritual e não contou a ninguém."],
+    Cultista:["Pertence a um culto dedicado a Nyarlathotep.","Já realizou um sacrifício humano.","Conhece fragmentos de um ritual de invocação.","Carrega um artefato blasfemo.","Está recrutando novos membros.","Recebe visões de uma entidade cósmica.","Possui uma cópia parcial do Necronomicon."],
+    Antagonista:["Planeja um assassinato meticulosamente.","Está manipulando os investigadores desde o início.","Já matou antes e considera necessário.","Trabalha para uma organização secreta.","Possui conhecimento arcano perigoso.","Fez acordo com uma entidade além da compreensão."],
+    Suspeito:["Esteve no local do crime por motivos diferentes.","Está encobrindo outra pessoa.","Mentiu sobre seu álibi por vergonha.","Tinha motivo mas não cometeu o crime.","Possui evidências que esconde por medo.","Roubou algo da cena do crime."],
+    Testemunha:["Viu mais do que admite.","Está com medo de represálias.","Foi ameaçado para manter silêncio.","Viu algo que não consegue explicar.","Estava fazendo algo ilegal quando testemunhou."],
+    Aliado:["Tem motivos pessoais ocultos para ajudar.","Já trabalhou para o lado oposto.","Esconde uma fraqueza comprometedora.","Conhece mais sobre o caso do que revela.","Possui conexões com o submundo."],
+    Vítima:["Provocou involuntariamente o que lhe aconteceu.","Estava envolvido em atividades ilegais.","Sabia demais sobre algo perigoso.","Deixou pistas escondidas.","Tinha uma vida dupla."]
+};
+
+const OBJECTIVES_DATA = {
+    general:["Sobreviver a qualquer custo.","Proteger sua família.","Descobrir a verdade sobre um evento misterioso.","Acumular riqueza e influência.","Encontrar paz após um trauma.","Manter sua reputação intacta.","Escapar de seu passado.","Vingar-se de alguém.","Encontrar um ente querido desaparecido.","Provar sua inocência.","Completar uma pesquisa de vida.","Expiar um pecado do passado."],
+    Testemunha:["Contar o que viu sem represálias.","Esquecer o que presenciou.","Encontrar alguém que acredite.","Descobrir se o que viu foi real."],
+    Suspeito:["Limpar seu nome.","Esconder sua conexão com o crime.","Desviar atenção das investigações.","Fugir antes que descubram."],
+    Aliado:["Ajudar os investigadores por dever.","Usar a investigação para algo pessoal.","Resolver o caso antes que mais se machuquem."],
+    Antagonista:["Completar seu plano sem interferência.","Eliminar quem sabe demais.","Adquirir um artefato de poder.","Abrir um portal."],
+    Cultista:["Realizar o Grande Ritual.","Recrutar mais seguidores.","Encontrar e traduzir um tomo proibido.","Preparar o retorno de seu deus."],
+    Investigador:["Resolver o caso seguindo pistas.","Expor a verdade custe o que custar.","Impedir que o horror se espalhe."],
+    Sobrevivente:["Encontrar um lugar seguro.","Alertar outros sobre o perigo.","Destruir a fonte do horror."],
+    Civil:["Manter sua rotina.","Proteger seu negócio.","Não se envolver.","Cuidar da família."],
+    Contato:["Fornecer informações em troca de favores.","Manter-se útil para garantir proteção."],
+    Familiar:["Encontrar a verdade sobre o parente.","Proteger o resto da família.","Obter justiça."],
+    Vítima:["Sobreviver e se recuperar.","Identificar quem fez isso.","Impedir que outros sofram."]
+};
+
+// ==============================
+// TOAST
+// ==============================
+const Toast = {
+    show(msg, type) {
+        type = type || 'info';
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + type;
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+};
+
+// ==============================
+// GENERATORS
+// ==============================
+function roll3d6x5() { let s=0; for(let i=0;i<3;i++) s+=Math.floor(Math.random()*6)+1; return s*5; }
+function roll2d6p6x5() { let s=6; for(let i=0;i<2;i++) s+=Math.floor(Math.random()*6)+1; return s*5; }
+function clampAttr(v) { return Math.max(15, Math.min(99, v)); }
+
+function applyTendency(val, dir) {
+    if (dir==="high") { val = Math.max(val,50); val += Math.floor(Math.random()*15)+5; }
+    else if (dir==="mid") { val += Math.floor(Math.random()*10); }
+    else if (dir==="low") { val -= Math.floor(Math.random()*10)+5; }
+    return clampAttr(val);
+}
+
+function generateAttributes(occ, age) {
+    const a = { STR:roll3d6x5(), CON:roll3d6x5(), SIZ:roll2d6p6x5(), DEX:roll3d6x5(), APP:roll3d6x5(), INT:roll2d6p6x5(), POW:roll3d6x5(), EDU:roll2d6p6x5(), Luck:roll3d6x5() };
+    const map = {FOR:'STR',CON:'CON',TAM:'SIZ',DES:'DEX',APA:'APP',INT:'INT',POD:'POW',EDU:'EDU',SOR:'Luck'};
+    if (occ && OCCUPATIONS[occ]) {
+        const t = OCCUPATIONS[occ].attrTendency || {};
+        for (const [k,d] of Object.entries(t)) { const ik=map[k]; if(ik&&a[ik]!==undefined) a[ik]=applyTendency(a[ik],d); }
+    }
+    age = parseInt(age)||30;
+    if(age<20){a.EDU=Math.max(a.EDU-10,30);a.STR=Math.max(a.STR-5,15);a.SIZ=Math.max(a.SIZ-5,30);}
+    else if(age>=50&&age<60){a.EDU=Math.min(a.EDU+10,99);['STR','CON','DEX','APP'].forEach(k=>a[k]=Math.max(a[k]-Math.floor(Math.random()*8+3),15));}
+    else if(age>=60&&age<70){a.EDU=Math.min(a.EDU+15,99);['STR','CON','DEX','APP'].forEach(k=>a[k]=Math.max(a[k]-Math.floor(Math.random()*10+5),15));}
+    else if(age>=70){a.EDU=Math.min(a.EDU+20,99);['STR','CON','DEX','APP'].forEach(k=>a[k]=Math.max(a[k]-Math.floor(Math.random()*20+10),15));}
+    for(const k of Object.keys(a)) a[k]=clampAttr(a[k]);
+    return a;
+}
+
+function calcDerived(a) {
+    const hp=Math.floor((a.CON+a.SIZ)/10), mp=Math.floor(a.POW/5), san=a.POW;
+    let mov=8;
+    if(a.DEX<a.SIZ&&a.STR<a.SIZ) mov=7; else if(a.DEX>a.SIZ&&a.STR>a.SIZ) mov=9;
+    const c=a.STR+a.SIZ; let bd="0",build=0;
+    if(c<=64){bd="-2";build=-2;}else if(c<=84){bd="-1";build=-1;}else if(c<=124){bd="0";build=0;}
+    else if(c<=164){bd="+1d4";build=1;}else if(c<=204){bd="+1d6";build=2;}else{bd="+2d6";build=3;}
+    return {hp,mp,san,mov,bd,build,dodge:Math.floor(a.DEX/2)};
+}
+
+function normSk(n){return n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
+function isOccSkill(sk,occSk){const ns=normSk(sk);return occSk.some(o=>{const no=normSk(o);return ns.includes(no)||no.includes(ns);});}
+function getOccSkills(occ){if(!occ||!OCCUPATIONS[occ])return[];return SKILLS.filter(s=>isOccSkill(s.name,OCCUPATIONS[occ].skills)).map(s=>s.name);}
+
+function generateSkills(occ, attrs) {
+    const sv={};
+    for(const s of SKILLS){let b=s.base;if(s.derived==='EDU')b=attrs.EDU||50;else if(s.derived==='DEX_HALF')b=Math.floor((attrs.DEX||50)/2);sv[s.name]=b;}
+    if(!occ||!OCCUPATIONS[occ])return sv;
+    const od=OCCUPATIONS[occ], os=od.skills||[];
+    const matched=SKILLS.filter(s=>isOccSkill(s.name,os)).map(s=>s.name);
+    const tp=(attrs.EDU||50)*4, avg=matched.length?Math.floor(tp/matched.length):0;
+    for(const sn of matched){const b=sv[sn];const bonus=Math.floor(Math.random()*(avg*0.4))+Math.floor(avg*0.4);sv[sn]=Math.min(b+bonus,90);}
+    if(od.creditMin!==undefined)sv["Crédito"]=Math.floor(Math.random()*(od.creditMax-od.creditMin+1))+od.creditMin;
+    const nonOcc=SKILLS.filter(s=>!isOccSkill(s.name,os)&&s.name!=="Crédito");
+    const pp=(attrs.INT||50)*2,np=Math.min(4,nonOcc.length),ap=np?Math.floor(pp/np):0;
+    const shuffled=[...nonOcc].sort(()=>Math.random()-0.5);
+    for(let i=0;i<np;i++){const sn=shuffled[i].name;const b=sv[sn];sv[sn]=Math.min(b+Math.floor(Math.random()*ap*0.3)+Math.floor(ap*0.3),75);}
+    return sv;
+}
+
+function generateName(sex){
+    let f;if(sex==="Feminino")f=NPC_NAMES.female.first;else if(sex==="Masculino")f=NPC_NAMES.male.first;
+    else f=Math.random()>0.5?NPC_NAMES.male.first:NPC_NAMES.female.first;
+    return f[Math.floor(Math.random()*f.length)]+' '+NPC_NAMES.male.last[Math.floor(Math.random()*NPC_NAMES.male.last.length)];
+}
+
+function pickRandom(arr){if(!arr||!arr.length)return"";return arr[Math.floor(Math.random()*arr.length)];}
+function genObjective(role){return pickRandom([...(OBJECTIVES_DATA[role]||[]),...(OBJECTIVES_DATA.general||[])]);}
+function genSecret(role){return pickRandom([...(SECRETS_DATA[role]||[]),...(SECRETS_DATA.general||[])]);}
+function genPersonality(n){n=n||3;const s=[...PERSONALITY_TRAITS].sort(()=>Math.random()-0.5);return s.slice(0,n);}
+
+function genId(){return 'npc_'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,9);}
+
+function createBlankNPC(){
+    const now=new Date().toISOString();
+    return {id:genId(),createdAt:now,updatedAt:now,sheetType:"npc",characterName:"",playerName:"Guardião",age:"",sex:"",occupation:"",role:"",residence:"",birthplace:"",portrait:"",personality:[],objective:"",secret:"",caseLink:"",personalDescription:"",backstory:"",attributes:{STR:50,CON:50,SIZ:60,DEX:50,APP:50,INT:60,POW:50,EDU:60,Luck:50},hpMax:11,hpCurrent:11,mpMax:10,mpCurrent:10,sanMax:50,sanCurrent:50,move:8,bonusDamage:"0",build:0,skills:{},weapons:[],inventory:[],spells:[],relations:[],traits:[],notes:""};
+}
+
+function generateFullNPC(opts){
+    const npc=createBlankNPC();
+    const sex=opts.sex||(Math.random()>0.5?"Masculino":"Feminino");
+    const occs=Object.keys(OCCUPATIONS);
+    const occ=opts.occupation||occs[Math.floor(Math.random()*occs.length)];
+    const role=opts.role||NARRATIVE_ROLES[Math.floor(Math.random()*NARRATIVE_ROLES.length)].id;
+    const age=opts.age||(Math.floor(Math.random()*45)+20);
+    npc.characterName=generateName(sex);npc.sex=sex;npc.age=age;npc.occupation=occ;npc.role=role;
+    npc.attributes=generateAttributes(occ,age);
+    const d=calcDerived(npc.attributes);
+    npc.hpMax=d.hp;npc.hpCurrent=d.hp;npc.mpMax=d.mp;npc.mpCurrent=d.mp;npc.sanMax=d.san;npc.sanCurrent=d.san;npc.move=d.mov;npc.bonusDamage=d.bd;npc.build=d.build;
+    npc.skills=generateSkills(occ,npc.attributes);
+    npc.personality=genPersonality(3);npc.objective=genObjective(role);npc.secret=genSecret(role);
+    npc.updatedAt=new Date().toISOString();
+    return npc;
+}
+
+// ==============================
+// STORAGE
+// ==============================
+const Storage = {
+    KEY: 'npckeeper_npcs',
+    getAll() { try{const d=localStorage.getItem(this.KEY);return d?JSON.parse(d):[];}catch(e){return[];} },
+    saveAll(npcs) { try{localStorage.setItem(this.KEY,JSON.stringify(npcs));}catch(e){} },
+    save(npc) { const all=this.getAll(); const i=all.findIndex(n=>n.id===npc.id); npc.updatedAt=new Date().toISOString(); if(i>=0)all[i]=npc;else all.push(npc); this.saveAll(all); },
+    remove(id) { this.saveAll(this.getAll().filter(n=>n.id!==id)); },
+    get(id) { return this.getAll().find(n=>n.id===id)||null; }
+};
+
+// ==============================
+// EXPORT
+// ==============================
+const Exporter = {
+    toCallKeeper(npc) {
+        const skills={},attributes={};
+        if(npc.skills)for(const[n,v]of Object.entries(npc.skills))skills[n]={value:v,half:Math.floor(v/2),fifth:Math.floor(v/5)};
+        if(npc.attributes)for(const[k,v]of Object.entries(npc.attributes))attributes[k]={value:v,half:Math.floor(v/2),fifth:Math.floor(v/5)};
+        const bp=[];
+        if(npc.role)bp.push("Papel: "+npc.role);if(npc.objective)bp.push("Objetivo: "+npc.objective);
+        if(npc.secret)bp.push("Segredo: "+npc.secret);if(npc.caseLink)bp.push("Ligação: "+npc.caseLink);
+        if(npc.backstory)bp.push("\n"+npc.backstory);
+        return {id:npc.id,createdAt:npc.createdAt,updatedAt:npc.updatedAt,sheetType:"npc",playerName:npc.playerName||"Guardião",characterName:npc.characterName||"NPC",age:String(npc.age||""),sex:npc.sex||"",occupation:npc.occupation||"",residence:npc.residence||"",birthplace:npc.birthplace||"",portrait:npc.portrait||"",attributes,hpMax:npc.hpMax||0,hpCurrent:npc.hpCurrent||0,mpMax:npc.mpMax||0,mpCurrent:npc.mpCurrent||0,sanMax:npc.sanMax||0,sanCurrent:npc.sanCurrent||0,move:npc.move||8,bonusDamage:npc.bonusDamage||"0",build:npc.build||0,skills,inventory:npc.inventory||[],weapons:npc.weapons||[],spells:npc.spells||[],relations:npc.relations||[],personalDescription:npc.personalDescription||"",traits:npc.personality||[],backstory:bp.join('\n'),notes:npc.notes||""};
+    },
+    download(data, filename) {
+        const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+    },
+    exportOne(npc) { this.download(this.toCallKeeper(npc), 'npc_'+(npc.characterName||'npc').replace(/[^a-zA-Z0-9]/g,'_')+'.json'); },
+    exportAll(npcs) { this.download(npcs.map(n=>this.toCallKeeper(n)), 'npckeeper_export_'+Date.now()+'.json'); },
+    importFile(file, cb) {
+        const r=new FileReader();
+        r.onload=function(e){
+            try{let d=JSON.parse(e.target.result);if(!Array.isArray(d))d=[d];
+            const npcs=d.map(item=>{const npc=createBlankNPC();npc.id=item.id||npc.id;npc.characterName=item.characterName||"";npc.age=item.age||"";npc.sex=item.sex||"";npc.occupation=item.occupation||"";npc.portrait=item.portrait||"";
+            if(item.attributes)for(const[k,v]of Object.entries(item.attributes)){if(typeof v==='object'&&v.value!==undefined)npc.attributes[k]=v.value;else if(typeof v==='number')npc.attributes[k]=v;}
+            if(item.skills)for(const[n,v]of Object.entries(item.skills)){if(typeof v==='object'&&v.value!==undefined)npc.skills[n]=v.value;else if(typeof v==='number')npc.skills[n]=v;}
+            npc.hpMax=item.hpMax||0;npc.hpCurrent=item.hpCurrent||0;npc.mpMax=item.mpMax||0;npc.mpCurrent=item.mpCurrent||0;
+            npc.sanMax=item.sanMax||0;npc.sanCurrent=item.sanCurrent||0;npc.weapons=item.weapons||[];npc.inventory=item.inventory||[];
+            npc.spells=item.spells||[];npc.relations=item.relations||[];npc.personality=item.traits||[];
+            npc.personalDescription=item.personalDescription||"";npc.backstory=item.backstory||"";npc.notes=item.notes||"";
+            return npc;});cb(null,npcs);}catch(err){cb(err,null);}
+        };r.readAsText(file);
+    }
+};
+
+// ==============================
+// APP STATE
+// ==============================
+let currentNPC = null;
+let showOnlyModified = false;
+
+// ==============================
+// HELPERS
+// ==============================
+function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ==============================
+// UI FUNCTIONS
+// ==============================
+function showWelcome() {
+    document.getElementById('welcomeScreen').style.display='flex';
+    document.getElementById('npcEditor').style.display='none';
+    currentNPC=null;
+    document.querySelectorAll('.npc-list-item').forEach(i=>i.classList.remove('active'));
+}
+
+function showEditor(npc) {
+    document.getElementById('welcomeScreen').style.display='none';
+    document.getElementById('npcEditor').style.display='block';
+    currentNPC=npc;
+    loadNPCToForm(npc);
+    document.querySelectorAll('.npc-list-item').forEach(i=>i.classList.toggle('active',i.dataset.id===npc.id));
+    if(window.innerWidth<=768)document.getElementById('sidebar').classList.remove('open');
+}
+
+function refreshList() {
+    const sq=(document.getElementById('searchNpc').value||'').toLowerCase();
+    const rf=document.getElementById('filterRole').value;
+    let npcs=Storage.getAll();
+    if(sq)npcs=npcs.filter(n=>(n.characterName||'').toLowerCase().includes(sq)||(n.occupation||'').toLowerCase().includes(sq));
+    if(rf)npcs=npcs.filter(n=>n.role===rf);
+    npcs.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+    const list=document.getElementById('npcList');
+    const empty=document.getElementById('emptyState');
+    document.getElementById('npcCount').textContent=Storage.getAll().length;
+    if(npcs.length===0){list.innerHTML='';list.appendChild(empty);empty.style.display='block';return;}
+    empty.style.display='none';
+    list.innerHTML=npcs.map(npc=>{
+        const active=currentNPC&&currentNPC.id===npc.id;
+        const rd=NARRATIVE_ROLES.find(r=>r.id===npc.role);
+        const ri=rd?rd.icon:'👤';
+        const hp=npc.portrait&&npc.portrait.length>0;
+        return `<div class="npc-list-item ${active?'active':''}" data-id="${npc.id}">
+            <div class="npc-list-thumb">${hp?`<img src="${npc.portrait}" alt="">`:ri}</div>
+            <div class="npc-list-info"><div class="npc-list-name">${npc.characterName||'Sem Nome'}</div>
+            <div class="npc-list-role">${npc.occupation||''}${npc.role?' · '+npc.role:''}</div></div></div>`;
+    }).join('');
+    list.querySelectorAll('.npc-list-item').forEach(item=>{
+        item.addEventListener('click',()=>{const n=Storage.get(item.dataset.id);if(n)showEditor(n);});
+    });
+}
+
+// ==============================
+// DYNAMIC LISTS
+// ==============================
+function renderWeapons() {
+    const c=document.getElementById('weaponsList');
+    if(!currentNPC||!currentNPC.weapons||!currentNPC.weapons.length){c.innerHTML='<div class="empty-inline">Nenhuma arma.</div>';return;}
+    c.innerHTML=currentNPC.weapons.map((w,i)=>`<div class="dynamic-item"><div class="item-fields">
+        <input type="text" class="form-input field-lg" value="${escHtml(w.name||'')}" placeholder="Nome" onchange="currentNPC.weapons[${i}].name=this.value">
+        <input type="text" class="form-input field-sm" value="${escHtml(w.skill||'')}" placeholder="%" onchange="currentNPC.weapons[${i}].skill=this.value">
+        <input type="text" class="form-input field-sm" value="${escHtml(w.damage||'')}" placeholder="Dano" onchange="currentNPC.weapons[${i}].damage=this.value">
+        <input type="text" class="form-input field-sm" value="${escHtml(w.range||'')}" placeholder="Alcance" onchange="currentNPC.weapons[${i}].range=this.value">
+        <input type="text" class="form-input field-sm" value="${escHtml(w.ammo||'')}" placeholder="Mun." onchange="currentNPC.weapons[${i}].ammo=this.value">
+    </div><button type="button" class="btn btn-sm btn-danger btn-remove" onclick="currentNPC.weapons.splice(${i},1);renderWeapons();">✕</button></div>`).join('');
+}
+function renderInventory() {
+    const c=document.getElementById('inventoryList');
+    if(!currentNPC||!currentNPC.inventory||!currentNPC.inventory.length){c.innerHTML='<div class="empty-inline">Nenhum item.</div>';return;}
+    c.innerHTML=currentNPC.inventory.map((it,i)=>{
+        const nm=typeof it==='string'?it:(it.name||'');const ds=typeof it==='string'?'':(it.description||'');
+        return `<div class="dynamic-item"><div class="item-fields">
+        <input type="text" class="form-input field-lg" value="${escHtml(nm)}" placeholder="Item" onchange="if(typeof currentNPC.inventory[${i}]==='string')currentNPC.inventory[${i}]={name:'',description:''};currentNPC.inventory[${i}].name=this.value">
+        <input type="text" class="form-input field-md" value="${escHtml(ds)}" placeholder="Desc." onchange="if(typeof currentNPC.inventory[${i}]==='string')currentNPC.inventory[${i}]={name:'',description:''};currentNPC.inventory[${i}].description=this.value">
+        </div><button type="button" class="btn btn-sm btn-danger btn-remove" onclick="currentNPC.inventory.splice(${i},1);renderInventory();">✕</button></div>`;
+    }).join('');
+}
+function renderSpells() {
+    const c=document.getElementById('spellsList');
+    if(!currentNPC||!currentNPC.spells||!currentNPC.spells.length){c.innerHTML='<div class="empty-inline">Nenhuma magia.</div>';return;}
+    c.innerHTML=currentNPC.spells.map((s,i)=>{
+        const nm=typeof s==='string'?s:(s.name||'');const cs=typeof s==='string'?'':(s.cost||'');
+        return `<div class="dynamic-item"><div class="item-fields">
+        <input type="text" class="form-input field-lg" value="${escHtml(nm)}" placeholder="Magia" onchange="if(typeof currentNPC.spells[${i}]==='string')currentNPC.spells[${i}]={name:'',cost:''};currentNPC.spells[${i}].name=this.value">
+        <input type="text" class="form-input field-sm" value="${escHtml(cs)}" placeholder="Custo" onchange="if(typeof currentNPC.spells[${i}]==='string')currentNPC.spells[${i}]={name:'',cost:''};currentNPC.spells[${i}].cost=this.value">
+        </div><button type="button" class="btn btn-sm btn-danger btn-remove" onclick="currentNPC.spells.splice(${i},1);renderSpells();">✕</button></div>`;
+    }).join('');
+}
+function renderRelations() {
+    const c=document.getElementById('relationsList');
+    if(!currentNPC||!currentNPC.relations||!currentNPC.relations.length){c.innerHTML='<div class="empty-inline">Nenhuma relação.</div>';return;}
+    c.innerHTML=currentNPC.relations.map((r,i)=>`<div class="dynamic-item"><div class="item-fields">
+        <input type="text" class="form-input field-md" value="${escHtml(r.name||'')}" placeholder="Nome" onchange="currentNPC.relations[${i}].name=this.value">
+        <input type="text" class="form-input field-lg" value="${escHtml(r.description||'')}" placeholder="Relação" onchange="currentNPC.relations[${i}].description=this.value">
+        </div><button type="button" class="btn btn-sm btn-danger btn-remove" onclick="currentNPC.relations.splice(${i},1);renderRelations();">✕</button></div>`).join('');
+}
+
+// ==============================
+// FORM LOADING
+// ==============================
+function loadNPCToForm(npc) {
+    document.getElementById('npcName').value=npc.characterName||'';
+    document.getElementById('npcAge').value=npc.age||'';
+    document.getElementById('npcSex').value=npc.sex||'';
+    document.getElementById('npcOccupation').value=npc.occupation||'';
+    document.getElementById('npcRole').value=npc.role||'';
+    document.getElementById('npcResidence').value=npc.residence||'';
+    document.getElementById('npcBirthplace').value=npc.birthplace||'';
+
+    // Portrait
+    const prev=document.getElementById('portraitPreview');
+    const ph=document.getElementById('portraitPlaceholder');
+    const rb=document.getElementById('btnRemovePortrait');
+    if(npc.portrait){prev.src=npc.portrait;prev.style.display='block';ph.style.display='none';rb.style.display='block';}
+    else{prev.src='';prev.style.display='none';ph.style.display='block';rb.style.display='none';}
+
+    // Personality
+    document.querySelectorAll('.trait-tag').forEach(t=>{
+        t.classList.toggle('selected',npc.personality&&npc.personality.includes(t.dataset.trait));
+    });
+
+    document.getElementById('npcObjective').value=npc.objective||'';
+    document.getElementById('npcSecret').value=npc.secret||'';
+    document.getElementById('npcCaseLink').value=npc.caseLink||'';
+    document.getElementById('npcDescription').value=npc.personalDescription||'';
+    document.getElementById('npcBackstory').value=npc.backstory||'';
+
+    // Attributes
+    const a=npc.attributes||{};
+    document.getElementById('attrSTR').value=a.STR||50;
+    document.getElementById('attrCON').value=a.CON||50;
+    document.getElementById('attrSIZ').value=a.SIZ||60;
+    document.getElementById('attrDEX').value=a.DEX||50;
+    document.getElementById('attrAPP').value=a.APP||50;
+    document.getElementById('attrINT').value=a.INT||60;
+    document.getElementById('attrPOW').value=a.POW||50;
+    document.getElementById('attrEDU').value=a.EDU||60;
+    document.getElementById('attrLuck').value=a.Luck||50;
+
+    document.getElementById('hpMax').value=npc.hpMax||0;
+    document.getElementById('hpCurrent').value=npc.hpCurrent||0;
+    document.getElementById('mpMax').value=npc.mpMax||0;
+    document.getElementById('mpCurrent').value=npc.mpCurrent||0;
+    document.getElementById('sanMax').value=npc.sanMax||0;
+    document.getElementById('sanCurrent').value=npc.sanCurrent||0;
+    document.getElementById('move').value=npc.move||8;
+    document.getElementById('bonusDamage').value=npc.bonusDamage||'0';
+    document.getElementById('build').value=npc.build||0;
+
+    // Skills
+    document.querySelectorAll('.skill-input').forEach(inp=>{
+        const n=inp.dataset.skillName;
+        const val=(npc.skills&&npc.skills[n]!==undefined)?npc.skills[n]:parseInt(inp.dataset.base)||0;
+        inp.value=val;
+        const row=inp.closest('.skill-row');
+        if(row)row.classList.toggle('modified',val>parseInt(inp.dataset.base||0));
+    });
+    highlightOccSkills(npc.occupation);
+
+    renderWeapons();renderInventory();renderSpells();renderRelations();
+    document.getElementById('npcNotes').value=npc.notes||'';
+    document.getElementById('editorTitle').textContent=npc.characterName||'Novo NPC';
+    document.getElementById('btnDeleteNpc').style.display=Storage.get(npc.id)?'inline-flex':'none';
+
+    // Reset to first tab
+    document.querySelectorAll('.tab')[0].click();
+}
+
+function readFormToNPC() {
+    if(!currentNPC)return;
+    currentNPC.characterName=document.getElementById('npcName').value;
+    currentNPC.age=document.getElementById('npcAge').value;
+    currentNPC.sex=document.getElementById('npcSex').value;
+    currentNPC.occupation=document.getElementById('npcOccupation').value;
+    currentNPC.role=document.getElementById('npcRole').value;
+    currentNPC.residence=document.getElementById('npcResidence').value;
+    currentNPC.birthplace=document.getElementById('npcBirthplace').value;
+    currentNPC.objective=document.getElementById('npcObjective').value;
+    currentNPC.secret=document.getElementById('npcSecret').value;
+    currentNPC.caseLink=document.getElementById('npcCaseLink').value;
+    currentNPC.personalDescription=document.getElementById('npcDescription').value;
+    currentNPC.backstory=document.getElementById('npcBackstory').value;
+    currentNPC.attributes={
+        STR:parseInt(document.getElementById('attrSTR').value)||50,
+        CON:parseInt(document.getElementById('attrCON').value)||50,
+        SIZ:parseInt(document.getElementById('attrSIZ').value)||60,
+        DEX:parseInt(document.getElementById('attrDEX').value)||50,
+        APP:parseInt(document.getElementById('attrAPP').value)||50,
+        INT:parseInt(document.getElementById('attrINT').value)||60,
+        POW:parseInt(document.getElementById('attrPOW').value)||50,
+        EDU:parseInt(document.getElementById('attrEDU').value)||60,
+        Luck:parseInt(document.getElementById('attrLuck').value)||50
+    };
+    currentNPC.hpMax=parseInt(document.getElementById('hpMax').value)||0;
+    currentNPC.hpCurrent=parseInt(document.getElementById('hpCurrent').value)||0;
+    currentNPC.mpMax=parseInt(document.getElementById('mpMax').value)||0;
+    currentNPC.mpCurrent=parseInt(document.getElementById('mpCurrent').value)||0;
+    currentNPC.sanMax=parseInt(document.getElementById('sanMax').value)||0;
+    currentNPC.sanCurrent=parseInt(document.getElementById('sanCurrent').value)||0;
+    currentNPC.move=parseInt(document.getElementById('move').value)||8;
+    currentNPC.bonusDamage=document.getElementById('bonusDamage').value;
+    currentNPC.build=parseInt(document.getElementById('build').value)||0;
+    document.querySelectorAll('.skill-input').forEach(inp=>{currentNPC.skills[inp.dataset.skillName]=parseInt(inp.value)||0;});
+    const sel=[];document.querySelectorAll('.trait-tag.selected').forEach(t=>sel.push(t.dataset.trait));
+    currentNPC.personality=sel;
+    currentNPC.notes=document.getElementById('npcNotes').value;
+    currentNPC.updatedAt=new Date().toISOString();
+}
+
+function highlightOccSkills(occ) {
+    document.querySelectorAll('.skill-row').forEach(r=>r.classList.remove('occupation-skill'));
+    if(!occ)return;
+    const os=getOccSkills(occ);
+    os.forEach(sn=>{const r=document.querySelector('.skill-row[data-skill-name="'+sn+'"]');if(r)r.classList.add('occupation-skill');});
+}
+
+function recalcDerived() {
+    if(!currentNPC)return;
+    readFormToNPC();
+    const d=calcDerived(currentNPC.attributes);
+    currentNPC.hpMax=d.hp;currentNPC.hpCurrent=d.hp;currentNPC.mpMax=d.mp;currentNPC.mpCurrent=d.mp;
+    currentNPC.sanMax=d.san;currentNPC.sanCurrent=d.san;currentNPC.move=d.mov;currentNPC.bonusDamage=d.bd;currentNPC.build=d.build;
+    document.getElementById('hpMax').value=d.hp;document.getElementById('hpCurrent').value=d.hp;
+    document.getElementById('mpMax').value=d.mp;document.getElementById('mpCurrent').value=d.mp;
+    document.getElementById('sanMax').value=d.san;document.getElementById('sanCurrent').value=d.san;
+    document.getElementById('move').value=d.mov;document.getElementById('bonusDamage').value=d.bd;document.getElementById('build').value=d.build;
+}
+
+// ==============================
+// MODAL
+// ==============================
+function modalShow(title,body,buttons){
+    document.getElementById('modalTitle').textContent=title;
+    document.getElementById('modalBody').innerHTML=body;
+    const ft=document.getElementById('modalFooter');ft.innerHTML='';
+    if(buttons)buttons.forEach(b=>{const btn=document.createElement('button');btn.className='btn btn-sm '+(b.cls||'btn-ghost');btn.textContent=b.text;
+    btn.addEventListener('click',()=>{if(b.action)b.action();modalHide();});ft.appendChild(btn);});
+    document.getElementById('modalOverlay').style.display='flex';
+}
+function modalHide(){document.getElementById('modalOverlay').style.display='none';}
+
+// ==============================
+// INIT
+// ==============================
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Populate selects
+    const occSel=document.getElementById('npcOccupation');
+    Object.keys(OCCUPATIONS).sort().forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;occSel.appendChild(op);});
+
+    const roleSel=document.getElementById('npcRole');
+    const filterSel=document.getElementById('filterRole');
+    NARRATIVE_ROLES.forEach(r=>{
+        const o1=document.createElement('option');o1.value=r.id;o1.textContent=r.icon+' '+r.label;roleSel.appendChild(o1);
+        const o2=document.createElement('option');o2.value=r.id;o2.textContent=r.icon+' '+r.label;filterSel.appendChild(o2);
+    });
+
+    // Personality grid
+    const pg=document.getElementById('personalityGrid');
+    PERSONALITY_TRAITS.forEach(t=>{
+        const tag=document.createElement('span');tag.className='trait-tag';tag.textContent=t;tag.dataset.trait=t;
+        tag.addEventListener('click',()=>{tag.classList.toggle('selected');
+            if(currentNPC){const sel=[];document.querySelectorAll('.trait-tag.selected').forEach(x=>sel.push(x.dataset.trait));currentNPC.personality=sel;}
+        });pg.appendChild(tag);
+    });
+
+    // Skills grid
+    const sg=document.getElementById('skillsGrid');
+    SKILLS.forEach(skill=>{
+        const row=document.createElement('div');row.className='skill-row';row.dataset.skillName=skill.name;
+        const nm=document.createElement('span');nm.className='skill-name';nm.textContent=skill.name;
+        const bs=document.createElement('span');bs.className='skill-base';bs.textContent='('+skill.base+')';
+        const inp=document.createElement('input');inp.type='number';inp.className='skill-input';inp.min=0;inp.max=99;
+        inp.value=skill.base;inp.dataset.skillName=skill.name;inp.dataset.base=skill.base;
+        inp.addEventListener('change',()=>{if(currentNPC){currentNPC.skills[skill.name]=parseInt(inp.value)||0;}
+            row.classList.toggle('modified',parseInt(inp.value)>parseInt(inp.dataset.base));
+        });
+        row.appendChild(nm);row.appendChild(bs);row.appendChild(inp);sg.appendChild(row);
+    });
+
+    // Skill search
+    document.getElementById('searchSkill').addEventListener('input',e=>{
+        const q=e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        document.querySelectorAll('.skill-row').forEach(r=>{
+            const n=r.dataset.skillName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+            r.classList.toggle('hidden',!n.includes(q));
+        });
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab=>{
+        tab.addEventListener('click',()=>{
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+            tab.classList.add('active');
+            const target=document.getElementById(tab.dataset.tab);
+            if(target)target.classList.add('active');
+        });
+    });
+
+    // Portrait
+    document.getElementById('portraitFrame').addEventListener('click',()=>document.getElementById('portraitInput').click());
+    document.getElementById('portraitInput').addEventListener('change',function(e){
+        const file=e.target.files[0];if(!file)return;
+        if(!file.type.startsWith('image/')){Toast.show('Selecione uma imagem válida.','error');return;}
+        if(file.size>2*1024*1024){Toast.show('Imagem muito grande (max 2MB).','error');return;}
+        const reader=new FileReader();
+        reader.onload=function(ev){
+            const img=new Image();img.onload=function(){
+                const canvas=document.createElement('canvas');const size=Math.min(img.width,img.height);
+                const sx=(img.width-size)/2,sy=(img.height-size)/2;canvas.width=512;canvas.height=512;
+                canvas.getContext('2d').drawImage(img,sx,sy,size,size,0,0,512,512);
+                const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+                document.getElementById('portraitPreview').src=dataUrl;
+                document.getElementById('portraitPreview').style.display='block';
+                document.getElementById('portraitPlaceholder').style.display='none';
+                document.getElementById('btnRemovePortrait').style.display='block';
+                if(currentNPC)currentNPC.portrait=dataUrl;
+            };img.src=ev.target.result;
+        };reader.readAsDataURL(file);
+    });
+    document.getElementById('btnRemovePortrait').addEventListener('click',function(e){
+        e.stopPropagation();
+        document.getElementById('portraitPreview').src='';document.getElementById('portraitPreview').style.display='none';
+        document.getElementById('portraitPlaceholder').style.display='block';this.style.display='none';
+        document.getElementById('portraitInput').value='';if(currentNPC)currentNPC.portrait='';
+    });
+
+    // Modal
+    document.getElementById('modalClose').addEventListener('click',modalHide);
+    document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')modalHide();});
+
+    // Theme
+    const savedTheme=localStorage.getItem('npckeeper_theme');
+    if(savedTheme)document.documentElement.setAttribute('data-theme',savedTheme);
+    function updateThemeIcon(){const th=document.documentElement.getAttribute('data-theme');document.querySelector('#btnThemeToggle .icon').textContent=th==='dark'?'☀️':'🌙';}
+    updateThemeIcon();
+    document.getElementById('btnThemeToggle').addEventListener('click',()=>{
+        const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';
+        document.documentElement.setAttribute('data-theme',n);localStorage.setItem('npckeeper_theme',n);updateThemeIcon();
+    });
+
+    // Sidebar toggle
+    document.getElementById('sidebarToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+    document.addEventListener('click',e=>{
+        if(window.innerWidth<=768){const sb=document.getElementById('sidebar');
+        if(sb.classList.contains('open')&&!sb.contains(e.target)&&e.target.id!=='sidebarToggle')sb.classList.remove('open');}
+    });
+
+    // Search & Filter
+    document.getElementById('searchNpc').addEventListener('input',refreshList);
+    document.getElementById('filterRole').addEventListener('change',refreshList);
+
+    // Occupation change
+    document.getElementById('npcOccupation').addEventListener('change',e=>highlightOccSkills(e.target.value));
+
+    // ===== BUTTONS =====
+    function createNewNPC(){
+        const npc=createBlankNPC();
+        showEditor(npc);
+        Toast.show('Novo NPC criado.','info');
+    }
+
+    document.getElementById('btnNewNpc').addEventListener('click', createNewNPC);
+    document.getElementById('btnWelcomeNew').addEventListener('click', createNewNPC);
+
+    document.getElementById('btnGenName').addEventListener('click',()=>{
+        if(!currentNPC)return;const s=document.getElementById('npcSex').value;
+        const name=generateName(s);document.getElementById('npcName').value=name;currentNPC.characterName=name;
+    });
+
+    document.getElementById('btnGenAttributes').addEventListener('click',()=>{
+        if(!currentNPC)return;
+        const occ=document.getElementById('npcOccupation').value;const age=document.getElementById('npcAge').value;
+        currentNPC.attributes=generateAttributes(occ,age);loadNPCToForm(currentNPC);recalcDerived();
+        Toast.show('Atributos gerados!','success');
+    });
+
+    document.getElementById('btnResetAttributes').addEventListener('click',()=>{
+        if(!currentNPC)return;
+        currentNPC.attributes={STR:50,CON:50,SIZ:60,DEX:50,APP:50,INT:60,POW:50,EDU:60,Luck:50};
+        loadNPCToForm(currentNPC);recalcDerived();
+    });
+
+    document.getElementById('btnCalcDerived').addEventListener('click',()=>{recalcDerived();Toast.show('Valores calculados!','success');});
+
+    document.getElementById('btnGenSkills').addEventListener('click',()=>{
+        if(!currentNPC)return;const occ=document.getElementById('npcOccupation').value;
+        if(!occ){Toast.show('Selecione uma profissão primeiro.','error');return;}
+        readFormToNPC();currentNPC.skills=generateSkills(occ,currentNPC.attributes);
+        document.querySelectorAll('.skill-input').forEach(inp=>{
+            const n=inp.dataset.skillName;inp.value=(currentNPC.skills[n]!==undefined)?currentNPC.skills[n]:parseInt(inp.dataset.base);
+            const row=inp.closest('.skill-row');if(row)row.classList.toggle('modified',parseInt(inp.value)>parseInt(inp.dataset.base));
+        });
+        highlightOccSkills(occ);Toast.show('Perícias geradas!','success');
+    });
+
+    document.getElementById('btnResetSkills').addEventListener('click',()=>{
+        if(!currentNPC)return;currentNPC.skills={};
+        document.querySelectorAll('.skill-input').forEach(inp=>{inp.value=inp.dataset.base;
+            const row=inp.closest('.skill-row');if(row)row.classList.remove('modified');
+        });Toast.show('Perícias resetadas.','info');
+    });
+
+    document.getElementById('btnToggleModified').addEventListener('click',()=>{
+        showOnlyModified=!showOnlyModified;
+        document.querySelectorAll('.skill-row').forEach(r=>{
+            if(showOnlyModified){const inp=r.querySelector('.skill-input');r.classList.toggle('hidden',parseInt(inp.value)<=parseInt(inp.dataset.base));}
+            else r.classList.remove('hidden');
+        });
+        document.getElementById('btnToggleModified').textContent=showOnlyModified?'👁️ Todas':'👁️ Só Modificadas';
+    });
+
+    document.getElementById('btnGenPersonality').addEventListener('click',()=>{
+        if(!currentNPC)return;const traits=genPersonality(3);currentNPC.personality=traits;
+        document.querySelectorAll('.trait-tag').forEach(t=>t.classList.toggle('selected',traits.includes(t.dataset.trait)));
+        Toast.show('Personalidade gerada!','success');
+    });
+
+    document.getElementById('btnGenObjective').addEventListener('click',()=>{
+        if(!currentNPC)return;const r=document.getElementById('npcRole').value;
+        currentNPC.objective=genObjective(r);document.getElementById('npcObjective').value=currentNPC.objective;
+    });
+
+    document.getElementById('btnGenSecret').addEventListener('click',()=>{
+        if(!currentNPC)return;const r=document.getElementById('npcRole').value;
+        currentNPC.secret=genSecret(r);document.getElementById('npcSecret').value=currentNPC.secret;
+    });
+
+    document.getElementById('btnGenerateAll').addEventListener('click',()=>{
+        const opts={
+            sex:document.getElementById('npcSex').value||undefined,
+            occupation:document.getElementById('npcOccupation').value||undefined,
+            role:document.getElementById('npcRole').value||undefined,
+            age:document.getElementById('npcAge').value||undefined
+        };
+        const npc=generateFullNPC(opts);
+        if(currentNPC){npc.id=currentNPC.id;npc.createdAt=currentNPC.createdAt;npc.portrait=currentNPC.portrait;}
+        currentNPC=npc;loadNPCToForm(npc);recalcDerived();
+        Toast.show('NPC gerado completamente!','success');
+    });
+
+    document.getElementById('btnSaveNpc').addEventListener('click',()=>{
+        readFormToNPC();Storage.save(currentNPC);refreshList();
+        document.getElementById('editorTitle').textContent=currentNPC.characterName||'Novo NPC';
+        document.getElementById('btnDeleteNpc').style.display='inline-flex';
+        Toast.show('NPC salvo!','success');
+    });
+
+    document.getElementById('btnExportNpc').addEventListener('click',()=>{
+        readFormToNPC();if(!currentNPC)return;Exporter.exportOne(currentNPC);Toast.show('JSON exportado!','success');
+    });
+
+    document.getElementById('btnDeleteNpc').addEventListener('click',()=>{
+        modalShow('Excluir NPC','<p>Tem certeza que deseja excluir este NPC?</p>',[
+            {text:'Cancelar',cls:'btn-ghost'},
+            {text:'Excluir',cls:'btn-danger',action:()=>{Storage.remove(currentNPC.id);refreshList();showWelcome();Toast.show('NPC excluído.','info');}}
+        ]);
+    });
+
+    document.getElementById('btnAddWeapon').addEventListener('click',()=>{if(!currentNPC)return;currentNPC.weapons.push({name:'',skill:'',damage:'',range:'',ammo:''});renderWeapons();});
+    document.getElementById('btnAddItem').addEventListener('click',()=>{if(!currentNPC)return;currentNPC.inventory.push({name:'',description:''});renderInventory();});
+    document.getElementById('btnAddSpell').addEventListener('click',()=>{if(!currentNPC)return;currentNPC.spells.push({name:'',cost:''});renderSpells();});
+    document.getElementById('btnAddRelation').addEventListener('click',()=>{if(!currentNPC)return;currentNPC.relations.push({name:'',description:''});renderRelations();});
+
+    // Export/Import all
+    document.getElementById('btnExportAll').addEventListener('click',()=>{
+        const all=Storage.getAll();if(!all.length){Toast.show('Nenhum NPC.','error');return;}
+        Exporter.exportAll(all);Toast.show(all.length+' NPC(s) exportado(s)!','success');
+    });
+    const fileInput=document.getElementById('importFileInput');
+    document.getElementById('btnImportNpcs').addEventListener('click',()=>fileInput.click());
+    fileInput.addEventListener('change',e=>{
+        const file=e.target.files[0];if(!file)return;
+        Exporter.importFile(file,(err,npcs)=>{
+            if(err){Toast.show('Erro ao importar.','error');return;}
+            let c=0;npcs.forEach(n=>{n.id=genId();Storage.save(n);c++;});
+            refreshList();Toast.show(c+' NPC(s) importado(s)!','success');fileInput.value='';
+        });
+    });
+
+    // Init list
+    refreshList();
+    if(Storage.getAll().length===0)showWelcome();
+});
+</script>
 </body>
 </html>
